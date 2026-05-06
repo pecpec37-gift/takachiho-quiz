@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高千穂クイズ道場</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛩️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest-deep: #0d1f0e;
+  --forest:      #142a15;
+  --forest-mid:  #1e4d20;
+  --green:       #2d7a30;
+  --leaf:        #7ec880;
+  --mist:        #c8e6c9;
+  --amber:       #e8a030;
+  --amber-dark:  #c07818;
+  --gold:        #d4a843;
+  --gold-light:  #f0cc70;
+  --crimson:     #c0392b;
+  --emerald:     #2ec480;
+  --white:       #fdfaf5;
+  --card-bg:     rgba(255,255,255,0.06);
+  --card-border: rgba(200,230,201,0.15);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:var(--forest-deep);
+  color:var(--white);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── 背景 ── */
+.bg-layer{
+  position:fixed;inset:0;z-index:-2;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(30,77,32,0.35) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 80% at 80% 15%, rgba(13,31,14,0.6) 0%,transparent 55%),
+    linear-gradient(150deg,#0d1f0e 0%,#142a15 50%,#0d1f0e 100%);
+}
+/* 鳥居シルエット装飾 */
+.bg-deco{
+  position:fixed;right:8px;bottom:24px;
+  font-size:72px;color:rgba(192,57,43,0.012);
+  z-index:-1;pointer-events:none;line-height:1;
+}
+.bg-mist{
+  position:fixed;bottom:0;left:0;right:0;height:140px;z-index:-1;
+  background:linear-gradient(to top,rgba(13,31,14,0.55),transparent);
+  pointer-events:none;
+}
+
+/* ── 共通 ── */
+.screen{display:none;}
+.screen.active{display:flex;flex-direction:column;align-items:center;}
+
+.badge{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--forest),var(--forest-mid));
+  border:1px solid rgba(200,230,201,0.3);
+  border-radius:40px;padding:5px 18px;
+  font-size:11px;letter-spacing:3px;color:var(--mist);
+  text-transform:uppercase;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--amber),var(--amber-dark));
+  color:#fff;border:none;border-radius:50px;
+  padding:16px 48px;font-family:'Noto Sans JP',sans-serif;
+  font-size:17px;font-weight:700;letter-spacing:2px;cursor:pointer;
+  box-shadow:0 8px 28px rgba(232,160,48,0.4);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(232,160,48,0.5);}
+
+.btn-secondary{
+  background:rgba(255,255,255,0.08);
+  border:1.5px solid rgba(200,230,201,0.25);
+  color:var(--mist);border-radius:50px;
+  padding:13px 36px;font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;
+}
+.btn-secondary:hover{background:rgba(200,230,201,0.15);border-color:var(--mist);}
+
+.divider{width:50px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:24px auto;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes popIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+@keyframes timerWarn{0%,100%{color:#ff6b6b;}50%{color:#ff0000;}}
+
+/* ═══ TOP ═══ */
+#top-screen{
+  justify-content:center;min-height:100vh;
+  padding:40px 20px 60px;text-align:center;
+}
+.top-badge{animation:fadeUp .7s both;}
+.top-title{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(38px,9vw,72px);font-weight:900;
+  line-height:1.05;letter-spacing:-1px;margin-top:20px;
+  animation:fadeUp .7s .08s both;
+}
+.top-title span{display:block;color:var(--gold);}
+.top-sub{
+  font-size:14px;color:var(--mist);opacity:.8;
+  letter-spacing:1.5px;margin-top:12px;
+  animation:fadeUp .7s .15s both;
+}
+.genre-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:16px;max-width:560px;width:100%;
+  margin:36px 0 32px;
+  animation:fadeUp .7s .25s both;
+}
+@media(max-width:480px){.genre-grid{grid-template-columns:1fr;}}
+
+.genre-card{
+  background:var(--card-bg);
+  border:1.5px solid var(--card-border);
+  border-radius:18px;padding:28px 20px;
+  cursor:pointer;transition:all .25s;
+  text-align:center;position:relative;overflow:hidden;
+}
+.genre-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(200,230,201,.08),transparent);
+  opacity:0;transition:opacity .25s;
+}
+.genre-card:hover{transform:translateY(-5px);border-color:rgba(200,230,201,.45);box-shadow:0 12px 36px rgba(0,0,0,.3);}
+.genre-card:hover::before{opacity:1;}
+.genre-icon{font-size:40px;margin-bottom:12px;}
+.genre-name{
+  font-family:'Noto Serif JP',serif;
+  font-size:20px;font-weight:700;color:var(--white);margin-bottom:6px;
+}
+.genre-count{font-size:12px;color:var(--mist);opacity:.7;letter-spacing:1px;}
+
+.rules-box{
+  max-width:520px;width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(200,230,201,.12);
+  border-radius:14px;padding:22px 28px;
+  text-align:left;font-size:13px;color:var(--mist);line-height:2;
+  animation:fadeUp .7s .35s both;
+}
+.rules-box h3{
+  font-family:'Noto Serif JP',serif;
+  font-size:15px;color:var(--gold);margin-bottom:10px;letter-spacing:1px;
+}
+.ranking-link{margin-top:18px;animation:fadeUp .7s .45s both;}
+.btn-ranking{
+  background:rgba(212,168,67,0.12);
+  border:1.5px solid rgba(212,168,67,0.35);
+  color:var(--gold);border-radius:50px;
+  padding:12px 32px;font-family:'Noto Sans JP',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;
+  letter-spacing:1.5px;transition:all .2s;
+}
+.btn-ranking:hover{background:rgba(212,168,67,0.22);border-color:var(--gold);}
+
+/* ═══ 名前入力 ═══ */
+#name-screen{
+  justify-content:center;min-height:100vh;padding:40px 20px;text-align:center;
+}
+.name-genre-title{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(26px,5vw,38px);font-weight:900;
+  margin:20px 0 6px;animation:fadeUp .5s both;
+}
+.name-genre-sub{font-size:13px;color:var(--mist);opacity:.7;margin-bottom:32px;animation:fadeUp .5s .05s both;}
+.name-input-wrap{animation:fadeUp .5s .1s both;}
+.name-input{
+  background:rgba(255,255,255,.08);
+  border:2px solid rgba(200,230,201,.25);
+  border-radius:12px;padding:14px 20px;
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:18px;color:var(--white);
+  width:280px;text-align:center;outline:none;transition:border-color .2s;
+}
+.name-input:focus{border-color:var(--green);}
+.name-input::placeholder{color:rgba(255,255,255,.3);}
+.name-btn-wrap{margin-top:24px;display:flex;gap:14px;justify-content:center;animation:fadeUp .5s .15s both;}
+
+/* ═══ クイズ ═══ */
+#quiz-screen{
+  min-height:100vh;padding:20px 20px 50px;
+  max-width:740px;margin:0 auto;width:100%;
+}
+.quiz-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:8px;width:100%;
+}
+.qh-left{display:flex;align-items:center;gap:14px;}
+.q-num{font-family:'Noto Serif JP',serif;font-size:13px;color:var(--mist);opacity:.7;letter-spacing:2px;}
+.q-score{font-size:14px;color:var(--gold);font-weight:700;letter-spacing:1px;}
+.timer-wrap{display:flex;align-items:center;gap:8px;}
+.timer-label{font-size:11px;color:var(--mist);opacity:.6;letter-spacing:1px;}
+.timer-num{
+  font-family:'Noto Serif JP',serif;
+  font-size:28px;font-weight:900;color:var(--mist);
+  min-width:42px;text-align:right;transition:color .3s;
+}
+.timer-num.warn{animation:timerWarn .5s infinite;}
+.progress-bar{width:100%;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:28px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--mist));border-radius:2px;transition:width .45s ease;}
+.cat-tag{
+  display:inline-block;font-size:11px;letter-spacing:2px;
+  color:var(--amber);border:1px solid rgba(232,160,48,.4);
+  border-radius:4px;padding:3px 10px;margin-bottom:16px;
+}
+.question-text{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(17px,3.5vw,22px);font-weight:700;
+  line-height:1.7;color:var(--white);
+  margin-bottom:28px;min-height:70px;
+}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;}
+@media(max-width:500px){.options-grid{grid-template-columns:1fr;}}
+
+.option-btn{
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(200,230,201,.15);
+  border-radius:14px;padding:18px 16px;
+  color:var(--white);font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;text-align:left;cursor:pointer;
+  transition:all .2s;line-height:1.5;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.option-btn:hover:not(:disabled){
+  background:rgba(200,230,201,.12);
+  border-color:rgba(200,230,201,.4);transform:translateY(-2px);
+}
+.opt-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:26px;height:26px;border-radius:50%;
+  background:rgba(200,230,201,.15);
+  color:var(--mist);font-size:12px;font-weight:700;
+  flex-shrink:0;margin-top:1px;
+}
+.option-btn.correct{background:rgba(46,196,128,.2);border-color:#2ec480;color:#7fe8a8;}
+.option-btn.correct .opt-label{background:rgba(46,196,128,.4);color:#fff;}
+.option-btn.wrong{background:rgba(232,160,48,.15);border-color:var(--amber);color:#f0c080;}
+.option-btn.wrong .opt-label{background:rgba(232,160,48,.4);color:#fff;}
+
+.feedback{
+  margin-top:20px;padding:16px 20px;border-radius:12px;
+  font-size:14px;line-height:1.75;
+  opacity:0;transform:translateY(10px);
+  transition:all .3s ease;pointer-events:none;width:100%;
+}
+.feedback.show{opacity:1;transform:translateY(0);pointer-events:auto;}
+.feedback.correct-fb{background:rgba(46,196,128,.12);border:1px solid rgba(46,196,128,.3);color:#a8efc8;}
+.feedback.wrong-fb{background:rgba(232,160,48,.12);border:1px solid rgba(232,160,48,.3);color:#f0c8a0;}
+.fb-head{font-weight:700;font-size:16px;display:block;margin-bottom:6px;}
+.time-badge{
+  display:inline-block;font-size:12px;font-weight:700;
+  border-radius:20px;padding:2px 10px;margin-left:8px;vertical-align:middle;
+}
+.time-plus{background:rgba(46,196,128,.3);color:#7fe8a8;}
+.time-minus{background:rgba(232,160,48,.3);color:#f0c080;}
+.next-btn{
+  margin-top:22px;width:100%;
+  background:linear-gradient(135deg,var(--forest-mid),var(--green));
+  color:#fff;border:none;border-radius:12px;
+  padding:16px;font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;
+  opacity:0;transition:all .3s ease;pointer-events:none;
+}
+.next-btn.show{opacity:1;pointer-events:auto;}
+.next-btn:hover{filter:brightness(1.15);}
+
+/* ═══ 結果 ═══ */
+#result-screen{
+  justify-content:flex-start;min-height:100vh;
+  padding:50px 20px 80px;text-align:center;
+  max-width:700px;margin:0 auto;width:100%;
+}
+.result-emoji{font-size:70px;margin-bottom:14px;animation:popIn .5s .1s both;}
+.result-title{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(26px,5vw,40px);font-weight:900;animation:fadeUp .5s .15s both;
+}
+.result-player{font-size:14px;color:var(--mist);opacity:.75;margin-top:6px;animation:fadeUp .5s .2s both;letter-spacing:1px;}
+.score-cards{
+  display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  margin:28px 0;animation:fadeUp .5s .25s both;
+}
+.score-card{
+  background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:14px;padding:16px 22px;text-align:center;min-width:100px;
+}
+.sc-val{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(28px,6vw,42px);font-weight:900;display:block;
+}
+.sc-val.gold{color:var(--gold);}
+.sc-val.green{color:var(--emerald);}
+.sc-val.blue{color:var(--mist);}
+.sc-label{font-size:11px;color:var(--mist);opacity:.65;letter-spacing:1px;margin-top:4px;display:block;}
+.result-msg{
+  font-size:15px;color:var(--mist);opacity:.85;
+  line-height:1.9;max-width:500px;margin:0 auto 32px;
+  animation:fadeUp .5s .3s both;
+}
+.wrong-section{
+  width:100%;max-width:680px;margin:0 auto 36px;text-align:left;
+  animation:fadeUp .5s .4s both;
+}
+.wrong-section h3{
+  font-family:'Noto Serif JP',serif;
+  font-size:18px;color:var(--amber);margin-bottom:16px;letter-spacing:1px;
+  padding-bottom:8px;border-bottom:1px solid rgba(232,160,48,.3);
+}
+.wrong-item{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(232,160,48,.2);
+  border-radius:12px;padding:18px 20px;margin-bottom:12px;
+}
+.wi-q{
+  font-family:'Noto Serif JP',serif;
+  font-size:15px;font-weight:700;color:var(--white);margin-bottom:8px;line-height:1.6;
+}
+.wi-wrong{font-size:13px;color:#f0c080;margin-bottom:4px;}
+.wi-correct{font-size:14px;font-weight:700;color:#7fe8a8;margin-bottom:8px;}
+.wi-exp{font-size:13px;color:rgba(255,255,255,.6);line-height:1.7;}
+.result-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .5s .5s both;}
+
+/* ═══ ランキング ═══ */
+.ranking-link{margin-top:18px;animation:fadeUp .7s .45s both;}
+#ranking-screen{
+  min-height:100vh;padding:40px 20px 80px;
+  max-width:700px;margin:0 auto;width:100%;text-align:center;
+}
+.ranking-title{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(28px,6vw,44px);font-weight:900;margin:16px 0 6px;animation:fadeUp .5s both;
+}
+.ranking-title span{display:block;color:var(--gold);}
+.genre-tabs{
+  display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
+  margin:24px 0 28px;animation:fadeUp .5s .1s both;
+}
+.genre-tab{
+  background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(200,230,201,.18);
+  border-radius:40px;padding:9px 20px;
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:13px;font-weight:700;color:var(--mist);
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.genre-tab:hover{background:rgba(200,230,201,.15);border-color:rgba(200,230,201,.4);}
+.genre-tab.active{
+  background:linear-gradient(135deg,var(--forest-mid),var(--green));
+  border-color:var(--green);color:#fff;
+  box-shadow:0 4px 16px rgba(45,122,48,.35);
+}
+.ranking-list-wrap{width:100%;max-width:600px;margin:0 auto;animation:fadeUp .5s .15s both;}
+.ranking-empty{padding:48px 0;color:var(--mist);opacity:.5;font-size:14px;}
+.ranking-row{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(200,230,201,.12);
+  border-radius:14px;padding:14px 18px;margin-bottom:10px;transition:transform .15s;
+}
+.ranking-row:hover{transform:translateX(4px);}
+.ranking-row.top1{background:linear-gradient(135deg,rgba(212,168,67,.18),rgba(212,168,67,.06));border-color:rgba(212,168,67,.4);}
+.ranking-row.top2{background:linear-gradient(135deg,rgba(200,230,201,.14),rgba(200,230,201,.04));border-color:rgba(200,230,201,.3);}
+.ranking-row.top3{background:linear-gradient(135deg,rgba(232,160,48,.12),rgba(232,160,48,.04));border-color:rgba(232,160,48,.25);}
+.rank-num{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:900;min-width:36px;text-align:center;}
+.rank-num.g1{color:var(--gold);}
+.rank-num.g2{color:var(--mist);}
+.rank-num.g3{color:#f0a060;}
+.rank-num.gn{color:rgba(255,255,255,.35);font-size:16px;}
+.rank-medal{font-size:22px;min-width:28px;}
+.rank-info{flex:1;text-align:left;}
+.rank-name{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:700;color:var(--white);}
+.rank-detail{font-size:12px;color:var(--mist);opacity:.65;margin-top:2px;}
+.rank-score{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:900;color:var(--gold);text-align:right;min-width:60px;}
+.rank-score span{font-size:11px;font-weight:400;color:var(--mist);opacity:.7;display:block;}
+</style>
+</head>
+<body>
+<div class="bg-layer"></div>
+<div class="bg-deco">⛩</div>
+<div class="bg-mist"></div>
+
+<!-- ═══ TOP ═══ -->
+<div id="top-screen" class="screen active">
+  <div class="badge top-badge">🌄 Takachiho Quiz</div>
+  <h1 class="top-title">高千穂<span>クイズ道場</span></h1>
+  <p class="top-sub">ジャンルを選んでスタート！</p>
+  <div class="divider"></div>
+  <div class="genre-grid">
+    <div class="genre-card" onclick="selectGenre('history')">
+      <div class="genre-icon">⛩️</div>
+      <div class="genre-name">歴史</div>
+      <div class="genre-count">神話・神社・古代史</div>
+    </div>
+    <div class="genre-card" onclick="selectGenre('geo')">
+      <div class="genre-icon">🗺️</div>
+      <div class="genre-name">地理</div>
+      <div class="genre-count">地形・川・交通・気候</div>
+    </div>
+    <div class="genre-card" onclick="selectGenre('food')">
+      <div class="genre-icon">🍶</div>
+      <div class="genre-name">特産品</div>
+      <div class="genre-count">食べ物・工芸・産業</div>
+    </div>
+    <div class="genre-card" onclick="selectGenre('spot')">
+      <div class="genre-icon">🌊</div>
+      <div class="genre-name">観光スポット</div>
+      <div class="genre-count">峡谷・滝・祭り・体験</div>
+    </div>
+  </div>
+  <div class="rules-box">
+    <h3>📋 ルール</h3>
+    制限時間：120秒 ／ 各ジャンル10問ランダム出題<br>
+    ✅ 正解 → <strong>+10点</strong> ＋ 時間+5秒<br>
+    ❌ 不正解 → 減点なし ＋ 時間−5秒のペナルティ<br>
+    🏆 残り時間がそのままボーナス点に加算！
+  </div>
+  <div class="ranking-link">
+    <button class="btn-ranking" onclick="showRanking()">🏆 スコアランキングを見る</button>
+  </div>
+</div>
+
+<!-- ═══ ランキング ═══ -->
+<div id="ranking-screen" class="screen">
+  <div class="badge" style="animation:fadeUp .5s both">🏆 RANKING</div>
+  <h2 class="ranking-title">スコア<span>ランキング</span></h2>
+  <div class="genre-tabs" id="genre-tabs">
+    <button class="genre-tab active" data-genre="history" onclick="switchRankingTab('history')">⛩️ 歴史</button>
+    <button class="genre-tab" data-genre="geo" onclick="switchRankingTab('geo')">🗺️ 地理</button>
+    <button class="genre-tab" data-genre="food" onclick="switchRankingTab('food')">🍶 特産品</button>
+    <button class="genre-tab" data-genre="spot" onclick="switchRankingTab('spot')">🌊 観光スポット</button>
+  </div>
+  <div class="ranking-list-wrap">
+    <div id="ranking-list"><div class="ranking-empty">読み込み中…</div></div>
+  </div>
+  <div style="margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn-secondary" onclick="goTop()">← トップへ</button>
+    <button onclick="clearRanking()" style="background:rgba(232,160,48,.1);border:1.5px solid rgba(232,160,48,.3);
+      color:#f0c080;border-radius:50px;padding:12px 24px;font-family:'Noto Sans JP',sans-serif;
+      font-size:13px;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.background='rgba(232,160,48,.2)'"
+      onmouseout="this.style.background='rgba(232,160,48,.1)'">
+      🗑️ このジャンルの記録を削除
+    </button>
+  </div>
+</div>
+
+<!-- ═══ 名前入力 ═══ -->
+<div id="name-screen" class="screen">
+  <div class="badge" id="name-badge">歴史クイズ</div>
+  <h2 class="name-genre-title" id="name-genre-title">歴史クイズ</h2>
+  <p class="name-genre-sub">10問ランダム出題 ／ 120秒</p>
+  <div class="name-input-wrap">
+    <input type="text" class="name-input" id="player-name" placeholder="プレイヤー名（任意）" maxlength="16">
+  </div>
+  <div class="name-btn-wrap">
+    <button class="btn-secondary" onclick="goTop()">← 戻る</button>
+    <button class="btn-primary" onclick="startQuiz()">スタート ▶</button>
+  </div>
+</div>
+
+<!-- ═══ クイズ ═══ -->
+<div id="quiz-screen" class="screen">
+  <div class="quiz-header">
+    <div class="qh-left">
+      <span class="q-num" id="q-num">Q1 / 10</span>
+      <span class="q-score" id="q-score">0 pt</span>
+    </div>
+    <div class="timer-wrap">
+      <span class="timer-label">残り</span>
+      <span class="timer-num" id="timer-num">120</span>
+      <span class="timer-label">秒</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div id="cat-tag" class="cat-tag"></div>
+  <div id="question-text" class="question-text"></div>
+  <div class="options-grid" id="options-grid"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">次の問題へ →</button>
+</div>
+
+<!-- ═══ 結果 ═══ -->
+<div id="result-screen" class="screen">
+  <div class="result-emoji" id="result-emoji">🌄</div>
+  <h2 class="result-title" id="result-title"></h2>
+  <p class="result-player" id="result-player"></p>
+  <div class="score-cards">
+    <div class="score-card">
+      <span class="sc-val gold" id="r-total">0</span>
+      <span class="sc-label">TOTAL SCORE</span>
+    </div>
+    <div class="score-card">
+      <span class="sc-val green" id="r-correct">0</span>
+      <span class="sc-label">正解数</span>
+    </div>
+    <div class="score-card">
+      <span class="sc-val blue" id="r-bonus">0</span>
+      <span class="sc-label">時間ボーナス</span>
+    </div>
+  </div>
+  <p class="result-msg" id="result-msg"></p>
+  <div id="ranking-save-area" style="animation:fadeUp .5s .35s both;width:100%;max-width:500px;margin:0 auto 20px;"></div>
+  <div class="wrong-section" id="wrong-section"></div>
+  <div class="result-btns">
+    <button class="btn-secondary" onclick="goTop()">← トップへ</button>
+    <button class="btn-secondary" onclick="showRanking(currentGenre)">🏆 ランキング</button>
+    <button class="btn-primary" onclick="retryQuiz()">もう一度挑戦</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   問題データベース（4ジャンル・合計約135問）
+══════════════════════════════════════════════════ */
+const DB = {
+
+/* ── 歴史（35問） ── */
+history:[
+  {q:"高千穂は「天孫降臨」の地として知られますが、天孫とは誰のことですか？",o:["ニニギノミコト","アマテラス","スサノオ","イザナギ"],a:0,e:"ニニギノミコト（瓊瓊杵尊）はアマテラスオオミカミの孫で、高天原から葦原中国（地上）を治めるために降臨したとされます。高千穂の「くしふる峰」がその地とされています。"},
+  {q:"高千穂神社の主祭神として祀られている神はどれですか？",o:["高千穂皇神（たかちほすめがみ）","アマテラス","ニニギノミコト","スサノオ"],a:0,e:"高千穂神社には高千穂郷八十八社の総社として「高千穂皇神」が祀られています。三毛入野命（みけぬのみこと）ほか神代の神々を合わせた総称です。"},
+  {q:"天岩戸神社に祀られている神はだれですか？",o:["アマテラスオオミカミ","スサノオノミコト","ツクヨミ","タケミカヅチ"],a:0,e:"天岩戸神社（西本宮）にはアマテラスオオミカミが祀られています。天の岩戸伝説の舞台であり、岩戸川を挟んだ東本宮にはアマテラスが岩屋に隠れた際の岩戸を神体として祀っています。"},
+  {q:"アマテラスが天の岩戸に隠れた原因を作った神はだれですか？",o:["スサノオノミコト","ツクヨミ","アメノウズメ","フトダマ"],a:0,e:"スサノオが母イザナミを慕い泣き続けたため地上が荒廃し、姉アマテラスはスサノオの乱暴を恐れて天の岩戸に閉じこもりました。これが世界を暗闇に包んだ事件です。"},
+  {q:"天の岩戸の前でアマテラスを引き出すために踊った女神はだれですか？",o:["アメノウズメノミコト","タマヨリビメ","コノハナサクヤビメ","イチキシマヒメ"],a:0,e:"アメノウズメノミコト（天鈿女命）が天の岩戸の前で神がかりの踊りを披露し、八百万の神々が笑い声を上げたことでアマテラスが戸を開けたとされます。これが神楽（かぐら）の起源とされています。"},
+  {q:"高千穂の夜神楽は1年のうち何月頃に奉納されますか？",o:["11〜12月頃（秋〜冬）","3〜4月","7〜8月","1〜2月"],a:0,e:"高千穂の夜神楽（よかぐら）は例年11月中旬〜翌年2月頃、各集落の氏神に奉納されます。33番の演目を一晩かけて舞う「岩戸神楽」が代表的で、国の重要無形民俗文化財です。"},
+  {q:"高千穂の夜神楽が国の重要無形民俗文化財に指定されたのはいつですか？",o:["1978年","1960年","2000年","1945年"],a:0,e:"高千穂の夜神楽は1978年（昭和53年）に国の重要無形民俗文化財に指定されました。地域の各集落が独自の神楽座（かぐらざ）を持ち、神に感謝を捧げる伝統が守られています。"},
+  {q:"高千穂が属する都道府県はどこですか？",o:["宮崎県","熊本県","大分県","鹿児島県"],a:0,e:"高千穂町は宮崎県の北西部、西臼杵郡に属します。熊本県・大分県と接する山深い地域で、九州山地の中央部に位置しています。"},
+  {q:"高千穂峡の柱状節理の岩壁はどのような地質現象でできましたか？",o:["阿蘇山の火砕流が冷えて固まった","海底が隆起した","石灰岩が侵食された","氷河によって削られた"],a:0,e:"高千穂峡の柱状節理は、約12万年前の阿蘇山の大噴火による火砕流が五ヶ瀬川に流れ込み、冷却・収縮する際に規則正しい六角形の柱状に割れたものです。"},
+  {q:"古事記・日本書紀において天孫降臨の舞台とされる山はどれですか？",o:["高千穂峰（霧島）またはくしふる峰","富士山","大山（鳥取）","阿蘇山"],a:0,e:"天孫降臨の地については「くしふる峰（高千穂）」説と「高千穂峰（霧島）」説があります。高千穂町の「くしふる神社」はくしふる峰を聖地とし、地元では高千穂が降臨の地とされています。"},
+  {q:"高千穂神社の境内にある「夫婦杉」で有名な木は何ですか？",o:["樹齢800年超の二本杉","樹齢2000年の一本杉","樹齢300年の五葉松","樹齢500年の大楠"],a:0,e:"高千穂神社には「夫婦杉」と呼ばれる樹齢800年を超える二本の杉の木が並んでおり、二人でこの木の周りを手をつないで歩くと縁結び・夫婦円満になるとされています。"},
+  {q:"高千穂に伝わる「三田井氏（みたいし）」はどのような存在でしたか？",o:["室町〜戦国時代に高千穂を治めた豪族","江戸時代の藩主","古代の神官の家系","明治時代の地主"],a:0,e:"三田井氏は室町時代から戦国時代末期まで高千穂地域を支配した豪族で、神楽をはじめ高千穂の伝統文化の保護者でした。豊臣秀吉の九州征伐後に滅びました。"},
+  {q:"高千穂を舞台にした神話が多く収録されている書物はどれですか？",o:["古事記・日本書紀","万葉集","風土記（日向国）","今昔物語集"],a:0,e:"古事記（712年）・日本書紀（720年）には天孫降臨・天の岩戸・山幸彦と海幸彦など高千穂ゆかりの神話が多く収録されています。日向国風土記にも関連記述があります。"},
+  {q:"「山幸彦と海幸彦」の神話で、海の神（綿津見神）の宮殿を訪れたのはどちらですか？",o:["山幸彦（ホオリノミコト）","海幸彦（ホデリノミコト）","ニニギノミコト","スサノオ"],a:0,e:"山幸彦（ホオリノミコト）は兄・海幸彦から借りた釣り針を失い、それを探すために海底の綿津見神の宮殿を訪れました。そこで海神の娘トヨタマビメと結婚します。"},
+  {q:"高千穂神楽に登場する「タヂカラオ」はどのような役割の神ですか？",o:["岩戸を引き開けた力の神","嵐の神","稲作の神","海の守護神"],a:0,e:"タヂカラオノミコト（天手力男命）は怪力の神で、アメノウズメの踊りで隙を見てアマテラスの手を取り岩戸から引き出した神です。神楽では豪快な所作で演じられます。"},
+  {q:"高千穂周辺の神社の総称として使われる「高千穂郷八十八社」の総社はどこですか？",o:["高千穂神社","天岩戸神社","荒立神社","くしふる神社"],a:0,e:"高千穂神社は高千穂郷八十八社の総社で、地域の神々を統括する格式の高い神社です。本殿は室町時代の建築で国の重要文化財に指定されています。"},
+  {q:"高千穂に伝わる「鬼八（きはち）」伝説で、鬼八を退治したとされる神はだれですか？",o:["三毛入野命（みけぬのみこと）","ニニギノミコト","スサノオ","ヤマトタケル"],a:0,e:"三毛入野命（みけぬのみこと）が霜や冰で農作物を荒らす荒神・鬼八を退治したとされます。高千穂神社にはその伝説に基づく「鬼八の力石」も残っています。"},
+  {q:"高千穂峡のボート遊びで有名な「真名井の滝」の落差はおよそどれくらいですか？",o:["約17m","約5m","約50m","約100m"],a:0,e:"真名井の滝は落差約17mで、柱状節理の絶壁から直接落下する美しい滝です。日本の滝百選にも選ばれており、ボートから見上げる景観が絶景として知られています。"},
+  {q:"天岩戸神話で神々が集まって相談した川原を何と呼びますか？",o:["天安河原（あまのやすかわら）","天ノ浮橋","高天原","タカチホの森"],a:0,e:"天安河原（あまのやすかわら）は岩戸川上流にある洞窟で、アマテラスが岩戸に隠れた際に八百万の神々が集まり対策を相談した場所とされます。現在も願掛けの石積みが行われています。"},
+  {q:"高千穂神社の本殿が建てられたとされる時代はいつですか？",o:["室町時代","奈良時代","江戸時代","明治時代"],a:0,e:"高千穂神社の本殿（三間社流造）は室町時代（1458年）に領主・三田井親直によって建て替えられたもので、国の重要文化財に指定されています。"},
+  {q:"高千穂で毎年9月に行われる例大祭「秋季例大祭」の別名はどれですか？",o:["高千穂神社大祭","秋の神迎え祭","天岩戸祭","くしふる祭"],a:0,e:"高千穂神社では毎年9月に例大祭が行われ、神楽の奉納や流鏑馬なども執り行われます。夜神楽とは別に、秋に神社の年間行事として盛大に開催されます。"},
+  {q:"「高千穂郷・椎葉山地域」として、2015年に認定された国際的な農業遺産はどれですか？",o:["世界農業遺産（GIAHS）","ユネスコ無形文化遺産","世界自然遺産","日本遺産"],a:0,e:"高千穂郷・椎葉山地域は2015年にFAOの世界農業遺産（GIAHS）に認定されました。山間地の焼畑農業や棚田など、持続可能な伝統農業システムが評価されました。"},
+  {q:"高千穂の夜神楽「岩戸神楽」は何番（何演目）で構成されていますか？",o:["33番","12番","100番","7番"],a:0,e:"高千穂の岩戸神楽は33番の演目で構成され、日没から夜明けまで一晩かけて奉納されます。天の岩戸神話を再現する「岩戸開き」が最大の見どころです。"},
+  {q:"高千穂に伝わる神楽の中で「手力雄の舞」が再現する神話の場面はどれですか？",o:["天の岩戸を開ける場面","スサノオが嵐を起こす場面","ニニギが降臨する場面","海の神と戦う場面"],a:0,e:"「手力雄の舞」はタヂカラオが天の岩戸を引き開けてアマテラスを外へ引き出す場面を再現した舞で、勇壮な所作が特徴です。神楽の中でも人気の高い演目です。"},
+  {q:"高千穂神社の近くにある「荒立神社（あらたてじんじゃ）」の主祭神はだれですか？",o:["サルタヒコとアメノウズメ","アマテラス","ニニギノミコト","スサノオ"],a:0,e:"荒立神社にはサルタヒコノミコトとアメノウズメノミコトが祀られています。二柱は夫婦神とされ、芸能・縁結びの神として芸能人の参拝も多いことで知られます。"},
+  {q:"日本最古の歴史書「古事記」が編纂されたのはいつですか？",o:["712年（和銅5年）","720年","794年","593年"],a:0,e:"古事記は712年（和銅5年）に太安万侶が編纂し元明天皇に献上した日本最古の歴史書です。天地開闢から推古天皇までの神話・歴史が記されています。"},
+  {q:"高千穂と関係が深い「コノハナサクヤビメ」はどのような神ですか？",o:["ニニギの妻・富士山の神","海の神の娘","アマテラスの娘","大地母神"],a:0,e:"コノハナサクヤビメ（木花咲耶姫）はニニギノミコトの妻で、富士山の神としても知られます。一夜で懐妊したことを疑われ、燃える産室で出産して潔白を証明した神話が有名です。"},
+  {q:"高千穂町の人口はおよそどれくらいですか？（近年）",o:["約12,000人","約50,000人","約3,000人","約100,000人"],a:0,e:"高千穂町の人口は近年約12,000〜13,000人程度で、過疎化が課題となっています。しかし観光業の発展により年間約130万人の観光客が訪れる地域です。"},
+  {q:"「海幸山幸」の神話で海幸彦の名前はどれですか？",o:["ホデリノミコト","ホオリノミコト","ホスセリノミコト","ウガヤフキアエズ"],a:0,e:"海幸彦はホデリノミコト（火照命）といいます。兄弟間での釣り針と弓の交換から始まる神話で、最終的に山幸彦に服従する結末となり、海人族と山人族の関係を象徴するとも解釈されます。"},
+  {q:"高千穂峡が「日本百景」に選ばれた時期はいつ頃ですか？",o:["1927年（昭和2年）","1868年（明治元年）","2000年","1950年代"],a:0,e:"高千穂峡は1927年（昭和2年）に日本百景に選定されました。阿蘇山の火砕流で形成された峡谷美と神話の地としての価値が評価されています。"},
+  {q:"高千穂神社の「神楽殿」では現在どのような体験ができますか？",o:["毎夜有料で神楽の鑑賞ができる","神楽の稽古に参加できる","神主の体験ができる","本格的な神事に参列できる"],a:0,e:"高千穂神社の神楽殿では毎晩（20:00〜21:00頃）有料の「高千穂神楽」が奉納されており、観光客も鑑賞できます。岩戸開きなど主要な演目を約1時間で体験できます。"},
+  {q:"「五ヶ瀬川（ごかせがわ）」が高千穂峡を刻んだ地質的な要因はどれですか？",o:["阿蘇山の火砕流台地を長年かけて侵食","氷河期の氷河が削った","地震による断層崩壊","石灰岩の溶食（カルスト地形）"],a:0,e:"阿蘇山の大噴火（約12〜9万年前）による火砕流が堆積して形成した溶結凝灰岩の台地を、五ヶ瀬川が長年にわたって侵食・刻み込んで現在の高千穂峡が形成されました。"},
+  {q:"高千穂に伝わる伝統芸能「高千穂神楽」の担い手は主にだれですか？",o:["各集落の氏子（地域住民）","専門の神楽師集団","神社の神職のみ","国立の芸能保存団体"],a:0,e:"高千穂神楽は各集落の氏子（地域住民）が代々受け継ぐ民俗芸能で、神楽座（かぐらざ）と呼ばれる地域グループが担っています。専門家ではなく地域住民が守り伝えている点が特徴です。"},
+  {q:"高千穂峡付近の「おのころ島神社」ではなく「天岩戸神社」に隣接する有名な場所はどれですか？",o:["天安河原（あまのやすかわら）","五ヶ瀬川源流","くしふる峰","三田井城跡"],a:0,e:"天岩戸神社に隣接する天安河原は、岩戸川を800mほど遡った場所にある大洞窟で、八百万の神々が集まり岩戸開きを相談した場所とされます。無数の石積みが幻想的な雰囲気を作り出しています。"},
+],
+
+/* ── 地理（30問） ── */
+geo:[
+  {q:"高千穂町が属する郡はどれですか？",o:["西臼杵郡（にしうすきぐん）","東臼杵郡","児湯郡","北諸県郡"],a:0,e:"高千穂町は宮崎県西臼杵郡に属します。同郡には五ヶ瀬町・日之影町も含まれます。宮崎県の最北西部に位置し、熊本県・大分県と接しています。"},
+  {q:"高千穂峡を流れる川はどれですか？",o:["五ヶ瀬川（ごかせがわ）","大淀川","耳川","小丸川"],a:0,e:"五ヶ瀬川は高千穂峡を流れる延長106kmの一級河川で、宮崎県内最長の川です。高千穂峡では柱状節理の断崖の間を流れ、峡谷美の核心をなしています。"},
+  {q:"高千穂町の標高（市街地付近）はおよそどれくらいですか？",o:["約300〜500m","約50m","約1500m","約1000m"],a:0,e:"高千穂の市街地は標高約300〜500m程度の山間盆地に位置しています。周囲は九州山地に囲まれ、夏でも比較的涼しく、冬は雪が降ることもあります。"},
+  {q:"高千穂から熊本市へ向かう主要ルートとして使われる国道はどれですか？",o:["国道325号・218号","国道10号","国道3号","国道1号"],a:0,e:"高千穂から熊本方面へは国道325号・218号が主要ルートです。阿蘇の外輪山を越えるルートで、沿線に阿蘇山や白川水源などの観光地が続きます。"},
+  {q:"高千穂峡の柱状節理の岩壁の高さはおよそどれくらいですか？",o:["80〜100m","5〜10m","200〜300m","10〜20m"],a:0,e:"高千穂峡の柱状節理の断崖は高さ80〜100mにもなります。五ヶ瀬川の両岸に続く柱状の岩壁が作り出す景観は、日本でも有数の峡谷美として知られています。"},
+  {q:"高千穂に隣接する「五ヶ瀬町」で有名なスキー場はどれですか？",o:["五ヶ瀬ハイランドスキー場","高千穂スキーパーク","霧島スキー場","えびのスキー場"],a:0,e:"五ヶ瀬ハイランドスキー場は九州最大級のスキー場で、高千穂に隣接する五ヶ瀬町に位置します。九州で唯一の本格的なスキー場として知られています。"},
+  {q:"高千穂峡のボート乗り場に近い「真名井の滝」の水源として伝わる言い伝えはどれですか？",o:["天村雲命がもたらした天の真名井の水","阿蘇山の雪解け水","地下水脈が湧き出したもの","五ヶ瀬川の支流"],a:0,e:"真名井の滝の水は天孫降臨の際に天村雲命が持参した「天の真名井の水（あまのまないのみず）」が水源と伝わります。御神水として神聖視されており、飲料水としても利用されてきました。"},
+  {q:"高千穂が位置する山地の名称はどれですか？",o:["九州山地","霧島山地","筑紫山地","四国山地"],a:0,e:"高千穂は九州中央部に連なる「九州山地」の中に位置しています。険しい山岳地形が交通を遮り、古くから独自の文化・伝統が育まれてきました。"},
+  {q:"高千穂峡の全長（峡谷の延長）はおよそどれくらいですか？",o:["約7km","約500m","約50km","約1km"],a:0,e:"高千穂峡は五ヶ瀬川に沿って約7kmにわたって続く峡谷です。ボート乗り場周辺の「真名井の滝」付近が最も有名な景観スポットです。"},
+  {q:"高千穂の気候の特徴として正しいのはどれですか？",o:["山間部の冷涼な気候で冬は雪が降る","温暖で雪は降らない亜熱帯気候","夏が非常に暑い盆地型気候","常に霧が多く日照時間が短い"],a:0,e:"高千穂は九州山地の山間部に位置するため冷涼な気候で、冬季には積雪も見られます。夏は涼しく過ごしやすい一方、霧が発生しやすく「雲海」が名物になっています。"},
+  {q:"高千穂の「雲海」が見られる時期と場所として有名なのはどれですか？",o:["秋〜冬の早朝・国見ヶ丘から","夏の正午・高千穂峡から","春の夕方・天岩戸神社から","梅雨時・阿蘇外輪山から"],a:0,e:"高千穂の雲海は9月〜11月の早朝に「国見ヶ丘（くにみがおか）」展望所から鑑賞できます。五ヶ瀬川沿いの盆地に冷気が溜まり、白い雲の海が広がる幻想的な光景が人気です。"},
+  {q:"「国見ヶ丘」の標高はおよそどれくらいですか？",o:["約513m","約100m","約1200m","約2000m"],a:0,e:"国見ヶ丘は標高約513mの丘で、高千穂の街と周辺の山々・盆地を一望できます。神武天皇の孫がこの地から国見をしたという伝説にちなんで名付けられています。"},
+  {q:"高千穂峡のボートは年間何万艘ほど利用されますか？（最盛期）",o:["約10万艘","約100艘","約100万艘","約1000艘"],a:0,e:"高千穂峡のボートは人気が高く、多い年には年間10万艘を超えることもあります。特に春〜秋は予約や整理券が必要なほど混雑し、数時間待ちになることもあります。"},
+  {q:"高千穂から延岡市へ向かう「高千穂あまてらす鉄道」の旧路線名はどれですか？",o:["高千穂鉄道（旧高千穂線）","宮崎交通線","南九州線","日豊本線支線"],a:0,e:"高千穂あまてらす鉄道は、2005年の台風被害で廃線となった高千穂鉄道（旧国鉄高千穂線）の跡地を活用したトロッコ観光鉄道です。旧高千穂駅〜旧天岩戸駅間を運行しています。"},
+  {q:"高千穂峡の真名井の滝付近で乗れる「ボート」は一艘何人乗りですか？",o:["3人乗り","1人乗り","10人乗り","6人乗り"],a:0,e:"高千穂峡のボートは3人乗りの手漕ぎボートです。1時間800円（変動あり）で利用でき、柱状節理の岩壁と真名井の滝を間近で楽しめます。"},
+  {q:"高千穂と大分県竹田市を結ぶ道路として知られる「竹田高千穂道路（やまびこロード）」が通る峠はどれですか？",o:["夏木峠・馬見原","矢岳峠","えびの高原","加久藤峠"],a:0,e:"高千穂と大分・竹田方面を結ぶルートは夏木峠・馬見原を経由します。山岳地帯を貫くルートで、沿線には祖母山・傾山（かたむきやま）などの山岳景観が広がります。"},
+  {q:"高千穂峡に架かる「神橋（おのころ橋）」は何でできていますか？",o:["コンクリートアーチ橋","木造の吊り橋","石造りの橋","鉄製の吊り橋"],a:0,e:"高千穂峡に架かるコンクリートアーチ橋「高千穂大橋」「神橋」などが峡谷を横断しています。橋の上からの眺めは峡谷の全景を楽しめる人気のビューポイントです。"},
+  {q:"高千穂町の面積はおよそどれくらいですか？",o:["約95㎢","約10㎢","約500㎢","約1000㎢"],a:0,e:"高千穂町の面積は約95㎢です。周囲を山に囲まれた小さな町ですが、観光・農業・林業が主要産業として地域を支えています。"},
+  {q:"高千穂峡のある五ヶ瀬川流域の下流が注ぐ海はどれですか？",o:["日向灘（太平洋）","有明海","東シナ海","豊後水道"],a:0,e:"五ヶ瀬川は宮崎県北部を流れて延岡市で日向灘（太平洋）に注ぎます。全長106kmで宮崎県内最長の川であり、鮎釣りでも有名です。"},
+  {q:"高千穂から宮崎市街まで車でおよそどれくらいかかりますか？",o:["約2時間〜2時間半","約30分","約5時間","約10分"],a:0,e:"高千穂から宮崎市街まで車で約2時間〜2時間半かかります。山間部を通る道のりで、近年は宮崎自動車道の整備が進み以前より短縮されています。"},
+  {q:"高千穂の棚田として知られる「祖母山麓の棚田」が世界農業遺産に認定された理由はどれですか？",o:["焼畑農業と棚田を組み合わせた伝統的農業システム","有機農業の先進地として","茶の栽培技術","養蚕業の継承"],a:0,e:"高千穂郷・椎葉山地域は焼畑（はたけ）・棚田・山林を組み合わせた伝統的な土地利用システムが評価され、2015年に世界農業遺産（GIAHS）に認定されました。"},
+  {q:"高千穂峡へのアクセスで最寄りの主要都市はどこですか？",o:["延岡市（約40〜50km）","宮崎市（約100km）","熊本市（約80km）","大分市（約90km）"],a:0,e:"高千穂峡の最寄り主要都市は延岡市で、距離は約40〜50km・車で約1時間です。延岡市からはバスも出ており、観光の玄関口となっています。"},
+  {q:"高千穂で見られる「棚田」はどのような地形に作られていますか？",o:["急傾斜の山の斜面","平地の水田","海岸沿いの低地","川の中洲"],a:0,e:"高千穂の棚田は九州山地の急斜面を段状に切り開いた山岳農地です。機械が入りにくい急傾斜を手作業で管理しており、その景観は「日本の棚田百選」にも選ばれています。"},
+  {q:"高千穂峡の入口となる「大橋（たいきょう橋）」周辺の整備が進んだ時期はいつ頃ですか？",o:["昭和30〜40年代の観光開発期","江戸時代","明治維新直後","2000年代"],a:0,e:"高千穂峡の観光地としての整備は主に昭和30〜40年代（1955〜70年代）の高度経済成長期に進みました。遊歩道・ボート場・駐車場などのインフラが整備され、観光地として発展しました。"},
+  {q:"高千穂の「秘境」と呼ばれる地域として有名な、椎葉村との境近くにある渓谷はどれですか？",o:["槇峰（まきみね）渓谷・岩戸川渓谷","球磨川上流渓谷","白川水源渓谷","祖母山渓谷"],a:0,e:"高千穂周辺には岩戸川渓谷をはじめ、椎葉村境付近の山深い渓谷が「秘境」として知られます。人里離れた山岳地帯の自然が今も多く残っています。"},
+  {q:"高千穂から見える「祖母山（そぼさん）」の標高はどれくらいですか？",o:["1756m","3000m","800m","500m"],a:0,e:"祖母山は標高1756mで、大分・宮崎・熊本の3県にまたがる九州山地の主峰です。日本百名山の一つで、高千穂からも遠望できます。山頂からの眺望は九州随一とも言われます。"},
+  {q:"「高千穂あまてらす鉄道」のトロッコが渡る「高千穂橋梁（てっきょう）」はどのような橋ですか？",o:["水面から105mの高さのアーチ橋","木造の古橋","地下を通るトンネル","浮橋（うきはし）"],a:0,e:"高千穂橋梁（高千穂鉄道橋）は水面から約105mの高さに架かるアーチ型の鉄道橋で、完成当時は東洋一の高さを誇りました。現在はトロッコ観光鉄道が渡る絶景スポットです。"},
+  {q:"高千穂の年間観光客数はおよそどれくらいですか？",o:["約130万人","約1万人","約1000万人","約500万人"],a:0,e:"高千穂町には年間約130万人の観光客が訪れます（コロナ禍前の統計）。神話・神社・峡谷・神楽と多彩な観光資源を持ち、国内外から多くの旅行者が訪れます。"},
+  {q:"高千穂峡のボートが利用できる期間は通常いつですか？",o:["基本的に通年（荒天・増水時は休止）","4月〜10月のみ","夏季のみ","冬季は必ず閉鎖"],a:0,e:"高千穂峡のボートは基本的に通年運営されていますが、台風・増水・強風・濃霧などの荒天時は安全のため運休となります。シーズンによって繁忙期・閑散期があります。"},
+  {q:"高千穂の隣町「日之影町（ひのかげちょう）」で有名な渓谷はどれですか？",o:["日之影渓谷","高千穂峡","五ヶ瀬渓谷","祖母渓谷"],a:0,e:"日之影渓谷は日之影町を流れる日之影川沿いに続く美しい渓谷で、「青雲橋」などの高架橋が有名です。高千穂と延岡を結ぶルート沿いにあり、観光スポットとして知られています。"},
+],
+
+/* ── 特産品（35問） ── */
+food:[
+  {q:"高千穂で生産される有名な銘柄米の名前はどれですか？",o:["高千穂米（コシヒカリ等）","さとほまれ","にこまる","あきたこまち"],a:0,e:"高千穂では昼夜の寒暖差が大きい山間地の気候を活かしたコシヒカリなどの銘柄米が生産されています。「高千穂米」として地域ブランドを確立しており、甘みと粘りが特徴です。"},
+  {q:"高千穂の代表的な郷土料理「千穂の舞」はどのような料理ですか？",o:["地元食材を使った創作料理コース","牛肉の鉄板焼き","そばと山菜の定食","鍋料理の一種"],a:0,e:"「千穂の舞」は高千穂の地元食材（山菜・川魚・米・神楽豆腐など）を使った郷土料理コースで、旅館や料理店で提供されています。神話の里らしい盛り付けや料理名も特徴です。"},
+  {q:"高千穂で生産が盛んな「そば」の特徴はどれですか？",o:["昼夜の寒暖差で育った風味豊かな山そば","平地産の細打ちそば","乾燥地帯の砂そば","輸入小麦を混ぜたそば"],a:0,e:"高千穂の山間部は昼夜の寒暖差が大きく、風味豊かなそばが育ちます。地元産のそば粉を使った手打ちそばは観光客にも人気で、香り高く甘みのある味が特徴です。"},
+  {q:"高千穂の名産「神楽豆腐」の特徴はどれですか？",o:["にがりの代わりに山水を使った柔らかい豆腐","硬い島豆腐","揚げた油豆腐","小粒の豆を使った黒豆腐"],a:0,e:"神楽豆腐は高千穂の清らかな山水と地元産大豆を使って作られる柔らかくまろやかな豆腐です。神楽の神事にも使われる伝統食品で、土産物としても人気があります。"},
+  {q:"高千穂で古くから行われてきた「焼畑農業」で主に栽培される作物はどれですか？",o:["そば・ひえ・大豆","稲・麦・綿","茶・桑・たばこ","さつまいも・じゃがいも"],a:0,e:"高千穂の焼畑（はたけ）ではそば・ひえ・大豆・栗などが主に栽培されてきました。山の急斜面を焼いて開墾し、数年間作物を育てた後に休耕するサイクルが伝統的な農業システムです。"},
+  {q:"高千穂産の「地鶏」として宮崎県のブランド地鶏はどれですか？",o:["宮崎地鶏（みやざきじとっこ）","阿波尾鶏","比内地鶏","名古屋コーチン"],a:0,e:"「みやざきじとっこ（宮崎地鶏）」は宮崎県の在来種・天然記念物「宮崎地鶏」を含む地鶏ブランドで、高千穂周辺でも飼育されています。歯ごたえのある肉質と旨味が特徴です。"},
+  {q:"高千穂で採れる「椎茸（しいたけ）」はどのような栽培方法が多いですか？",o:["原木栽培（クヌギ・ナラの木を使用）","菌床栽培のみ","水耕栽培","土壌栽培"],a:0,e:"高千穂では豊富なクヌギ・ナラの原木を使った原木栽培が伝統的に行われています。肉厚で香り高い原木椎茸は高千穂の重要な特産品で、乾燥椎茸としても全国に出荷されます。"},
+  {q:"高千穂の「あゆ（鮎）」漁はどこで行われますか？",o:["五ヶ瀬川での友釣り・やな漁","棚田の用水路","山上の渓流池","海岸近くの河口"],a:0,e:"五ヶ瀬川は鮎釣りの名川で、毎年6月の解禁後には多くの釣り人が訪れます。「やな」（木枠の魚捕り装置）を使った伝統的な漁法も行われ、鮎料理は高千穂の名物です。"},
+  {q:"高千穂の地酒（日本酒・焼酎）の特徴はどれですか？",o:["清冽な山の湧き水を使った醸造","海水を使った独特の製法","炭酸水で割る地域限定飲料","発酵させないフレッシュ製法"],a:0,e:"高千穂の酒は九州山地の清冽な湧き水を仕込み水とした日本酒・焼酎が造られています。「高千穂酒造」などの蔵元が地元産米や麦を使った個性的な銘柄を生産しています。"},
+  {q:"高千穂で生産される「栗（くり）」の利用法として代表的なものはどれですか？",o:["栗きんとん・栗ご飯・栗焼酎","栗ラーメン","栗チョコレート","栗の佃煮のみ"],a:0,e:"高千穂の山間部では栗の栽培が盛んで、栗きんとん・栗ご飯・栗を使った和菓子など多様な加工品が作られます。また「栗焼酎」も高千穂の地酒として注目されています。"},
+  {q:"高千穂の伝統工芸「高千穂木工（もっこう）」で使われる主な樹木はどれですか？",o:["スギ・ヒノキ・ケヤキ","松・桜","竹・籐","椿・梅"],a:0,e:"九州山地の豊かな森林資源を活かし、高千穂ではスギ・ヒノキ・ケヤキなどを使った木工芸品が作られています。食器・工芸品・建築材として活用されています。"},
+  {q:"高千穂の「五ヶ瀬川のアユ塩焼き」でアユを串刺しにする際の伝統的な刺し方を何と呼びますか？",o:["踊り串（おどりぐし）","真っ直ぐ串","観音串","平串"],a:0,e:"アユの塩焼きで川の流れに逆らって泳ぐ姿を再現した串の刺し方を「踊り串」と呼びます。川の急流を泳ぐ鮎の生き生きとした姿を表現したもので、料理の美しさを引き立てます。"},
+  {q:"高千穂でよく食べられる「だご汁（だごじる）」はどのような料理ですか？",o:["小麦粉の団子入りの味噌汁","米粉の餅入り汁","そば団子のすまし汁","いも団子の甘い汁"],a:0,e:"だご汁は小麦粉を練って薄く伸ばした「だご（団子）」を野菜・きのこ・山菜と一緒に味噌仕立ての汁で煮た九州の郷土料理です。高千穂でも家庭料理・郷土食として親しまれています。"},
+  {q:"高千穂の「神楽まんじゅう」はどのような和菓子ですか？",o:["神楽の面（おもて）などをかたどった饅頭","神楽の踊り手が食べる特別な饅頭","神社に奉納する巨大な饅頭","神楽の演目名がついた饅頭"],a:0,e:"神楽まんじゅうは高千穂の土産品として有名な饅頭で、神楽の面や神話キャラクターなどをかたどったデザインが特徴です。地元の菓子店が独自のレシピで製造しています。"},
+  {q:"高千穂産のそばが有名な理由として最も適切なものはどれですか？",o:["寒暖差の大きい高地の気候と清涼な水","平地の大量栽培","特殊な肥料の使用","輸入そばとブレンドした独自製法"],a:0,e:"高千穂の山間部は朝晩の寒暖差が大きく霧も多いため、そばが充実した実をつけます。清涼な山の湧き水も麺作りに適しており、香り豊かな風味のあるそばが育ちます。"},
+  {q:"高千穂で収穫される「ゆず（柚子）」の活用法として代表的なものはどれですか？",o:["ゆず味噌・ゆず茶・ゆずこしょう","ゆず酒のみ","ゆず染料","ゆずの種から油を採る"],a:0,e:"高千穂の山間部ではゆずが栽培され、ゆず味噌・ゆず茶・ゆずこしょうなどの加工品として活用されます。特に「ゆずこしょう（柚子胡椒）」は九州の代表的な薬味として全国的に知られています。"},
+  {q:"高千穂の「高千穂牛（たかちほうし）」はどのような牛ですか？",o:["宮崎牛の産地に含まれる和牛","乳牛との交雑種","輸入牛","古代和牛の復元品種"],a:0,e:"高千穂牛は宮崎県のブランド和牛「宮崎牛」の産地のひとつとして飼育される黒毛和種です。山間地の清涼な環境でストレスなく育てられ、きめ細かい霜降りと旨味が特徴です。"},
+  {q:"高千穂の「天岩戸温泉」近くで販売されている土産品として有名なものはどれですか？",o:["岩戸まんじゅう・神話グッズ","高千穂産マグロの缶詰","珊瑚細工","塩昆布"],a:0,e:"天岩戸神社・天安河原周辺の土産店では岩戸まんじゅう・神話をモチーフにしたグッズ・地酒・干し椎茸・そば粉などが販売されています。"},
+  {q:"高千穂周辺で収穫される「ひえ（稗）」はどのように利用されますか？",o:["ひえ飯・ひえのおかゆ・雑穀として","ひえビール","ひえ豆腐","ひえラーメン"],a:0,e:"ひえは焼畑で栽培される雑穀で、米が不足した時代に主食として食べられてきました。現在はひえ飯・雑穀米・健康食品として見直されており、高千穂の伝統食材として地域料理に使われています。"},
+  {q:"高千穂の「神楽酒（かぐらしゅ）」はどのような酒ですか？",o:["神楽の夜に奉納・飲まれてきた地元の日本酒や焼酎","甘い梅酒","海外産ワインとブレンドしたもの","米麹だけで作るどぶろく"],a:0,e:"高千穂では神楽の夜に神に供え、また神楽の担い手（氏子）が飲む地酒の文化があります。「高千穂酒造」の清酒・焼酎をはじめ、土産品の「神楽酒」として販売されています。"},
+  {q:"高千穂でよく食べられる「山菜」として代表的なものはどれですか？",o:["わらび・ぜんまい・たらの芽","ひじき・わかめ","マングローブ芽","熱帯植物の新芽"],a:0,e:"高千穂の山間部では春に山菜が豊富に採れます。わらび・ぜんまい・たらの芽・木の芽・ふきなどが郷土料理に使われ、「山の幸」として料理店でも提供されます。"},
+  {q:"高千穂の「五ヶ瀬ワイン（ごかせわいん）」の原料となるぶどうはどのような特徴がありますか？",o:["標高の高い山間地で育った昼夜の寒暖差ぶどう","海岸近くで育てたしおかぜぶどう","温室栽培専用品種","外来品種のみを使用"],a:0,e:"五ヶ瀬・高千穂地域の高地・山間部では昼夜の寒暖差が大きいため、糖度と酸味のバランスが取れたぶどうが育ちます。「五ヶ瀬ワイン」として九州の高原ワインのブランドが確立されています。"},
+  {q:"高千穂で伝統的に作られる「みそ（味噌）」の特徴はどれですか？",o:["麦みそ・手作りの農家みそ","白みそのみ","米みそのみ","合わせみそ専用"],a:0,e:"九州全般と同様に高千穂でも麦みそが伝統的です。農家ごとに手作りされる「手前みそ（手前味噌）」の文化があり、だご汁などの郷土料理に使われます。"},
+  {q:"高千穂産の「干し椎茸」の品質を高める要因はどれですか？",o:["原木栽培・山の清澄な空気・十分な紫外線","肥料の多投","海からの塩分","温室内の高温栽培"],a:0,e:"高千穂産原木椎茸は豊かな森の中で自然に近い環境で育てられ、山の澄んだ空気・豊富な紫外線での天日干しにより旨味成分（グアニル酸）が増加します。肉厚で風味豊かな品質として知られます。"},
+  {q:"「高千穂茶（たかちほちゃ）」はどのような特徴の茶ですか？",o:["山間の霧と寒暖差が育む深みのある味","平地の大量栽培茶","人工着色した緑茶","輸入茶葉とのブレンド"],a:0,e:"高千穂の山間部は霧が多く昼夜の寒暖差が大きいため、渋み・旨味のバランスが良い高品質なお茶が育ちます。高千穂茶は宮崎県の銘茶として県外にも出荷されています。"},
+  {q:"高千穂で食べられる「天然鮎の塩焼き」が美味しい理由として最も適切なものはどれですか？",o:["清流五ヶ瀬川の苔を食んで育つため","海水育ちの養殖鮎のため","特別な餌を与えているため","輸入鮎を地元で加工するため"],a:0,e:"五ヶ瀬川は清流として有名で、川底に繁茂する良質な苔を食べて育つ天然鮎は「香鮎」とも称される芳醇な香りが特徴です。清流の恩恵を受けた鮎は高千穂の名物食材です。"},
+  {q:"高千穂の「神楽太鼓（かぐらだいこ）」は神楽のどのような場面で使われますか？",o:["神楽全般の伴奏リズム楽器として","神事の開始合図のみ","祭りの行列用","神社の除夜の鐘の代わり"],a:0,e:"神楽太鼓は高千穂神楽の全演目を通して使われるリズム楽器です。笛・手平鉦（てびらがね）と組み合わさった三拍子の神楽囃子（かぐらはやし）が舞の伴奏を務めます。"},
+  {q:"高千穂で採れる「ゆずこしょう（柚子胡椒）」の「こしょう（胡椒）」は何を指しますか？",o:["青唐辛子（とうがらし）","黒胡椒（こしょう）","山椒（さんしょう）","生姜（しょうが）"],a:0,e:"ゆずこしょうの「こしょう」は黒胡椒ではなく青唐辛子（または赤唐辛子）のことです。ゆずの皮と青唐辛子・塩をすり合わせた辛味薬味で、九州の郷土調味料として全国的に人気があります。"},
+  {q:"高千穂の「天岩戸豆腐」として知られる製品の特徴はどれですか？",o:["地元の湧き水と大豆で作る木綿豆腐","海水にがりのみの沖縄式","大量生産の工場製品","輸入大豆使用"],a:0,e:"高千穂の豆腐は地元の湧き水と宮崎・地域産の大豆を使い、にがりで固めた昔ながらの木綿豆腐が多く作られています。そのまま食べても豆の甘みが感じられる素朴な味わいです。"},
+  {q:"高千穂の秋の味覚として有名な「松茸（まつたけ）」の産地として知られる山はどれですか？",o:["祖母山・傾山の周辺アカマツ林","高千穂峡の断崖","五ヶ瀬川の河原","棚田の水田周辺"],a:0,e:"高千穂周辺の祖母山・傾山麓に広がるアカマツ林では松茸が採れます。山間部の土壌・気候が松茸の生育に適しており、秋の味覚として地元の料理店でも提供されます。"},
+  {q:"高千穂でよく飲まれる「芋焼酎」の主な原料はどれですか？",o:["さつまいも","じゃがいも","山芋（やまいも）","里芋（さといも）"],a:0,e:"九州南部の焼酎文化圏に属する高千穂では芋焼酎（さつまいも原料）がよく飲まれます。宮崎県内の蔵元が生産する銘柄焼酎は全国的にも人気が高くなっています。"},
+  {q:"高千穂の「棚田米（たなだまい）」が高品質とされる理由はどれですか？",o:["寒暖差・清らかな水・手間のかかる栽培管理","平地の大量生産米と同じ管理方法","化学肥料を大量に使用","温室内での水耕栽培"],a:0,e:"高千穂の棚田は機械が入りにくい急斜面に作られているため、手作業による丁寧な管理が必要です。清涼な山の水・朝夕の寒暖差・有機農業が組み合わさり、甘みと香りのある米が育ちます。"},
+  {q:"高千穂の「炭焼き（すみやき）」で作られる木炭の原料として主に使われる木はどれですか？",o:["クヌギ","竹","松","杉"],a:0,e:"高千穂の山間部ではクヌギを原料とした備長炭に似た木炭が作られてきました。クヌギ炭は火持ちが良く火力が安定しており、椎茸のホダ木としても利用されます。"},
+],
+
+/* ── 観光スポット（35問） ── */
+spot:[
+  {q:"高千穂峡のボート乗り場に最も近い滝はどれですか？",o:["真名井の滝","仙人の滝","白糸の滝","龍門の滝"],a:0,e:"真名井の滝は高千穂峡ボート乗り場のすぐ近くにある落差約17mの滝です。柱状節理の断崖から直接落下する姿は圧巻で、ボートから見上げると特に迫力があります。日本の滝百選に選定されています。"},
+  {q:"高千穂神社で毎晩行われる観光客向けの神楽鑑賞の時間はいつですか？",o:["20:00〜21:00頃","9:00〜10:00","15:00〜16:00","深夜0:00〜"],a:0,e:"高千穂神社の神楽殿では毎晩20:00〜21:00頃（約1時間）、観光客向けの「高千穂神楽」が有料で奉納されています。岩戸開きなどの演目を鑑賞でき、年中無休で実施されています。"},
+  {q:"「天安河原（あまのやすかわら）」で観光客がよく行う行為はどれですか？",o:["石を積んで願いをかける","川で水浴びする","木に絵馬を結ぶ","砂に名前を書く"],a:0,e:"天安河原の洞窟内では参拝者が石を積んで祈願する習慣があり、無数の石積みが幻想的な景観を作り出しています。縁結び・開運などを願う人々が全国から訪れます。"},
+  {q:"高千穂あまてらす鉄道のトロッコで渡る橋梁の名称はどれですか？",o:["高千穂橋梁（高千穂鉄道橋）","五ヶ瀬大橋","神橋","天の橋立"],a:0,e:"高千穂あまてらす鉄道は旧高千穂鉄道の高千穂橋梁（水面から約105m）を渡ります。スーパーカート（電動ゴーカート）がこの高架橋を走り抜ける体験が人気のアクティビティです。"},
+  {q:"高千穂峡の遊歩道から眺める「鬼八の力石」はどのようなものですか？",o:["峡谷内に転がる巨大な岩","鬼の顔に似た岩壁","橋の下にある彫刻","滝の後ろにある洞窟"],a:0,e:"「鬼八の力石」は高千穂峡の遊歩道付近に転がる巨大な岩で、鬼八が三毛入野命との戦いで投げつけたという伝説が残っています。神話の舞台を実感できる観光スポットです。"},
+  {q:"「国見ヶ丘（くにみがおか）」の雲海が見られる最もおすすめの時間帯はどれですか？",o:["日の出前後（早朝5〜7時頃）","正午","夕暮れ時","深夜0時頃"],a:0,e:"国見ヶ丘の雲海は日の出前後の早朝（5〜7時頃）が最も美しく見られます。夜間に冷え込んだ盆地に白い霧が溜まり、日の出の光に照らされる幻想的な光景が人気です。"},
+  {q:"高千穂峡の遊歩道の総延長はおよそどれくらいですか？",o:["約1km","約10km","約50m","約5km"],a:0,e:"高千穂峡の遊歩道は真名井の滝周辺を中心に約1km整備されており、柱状節理の断崖とエメラルドグリーンの川を眺めながら散策できます。ボート乗り場・駐車場へのアクセスも遊歩道沿いです。"},
+  {q:"天岩戸神社の「西本宮」では何の神が祀られ、何が見どころですか？",o:["アマテラスを祀り、御神体の岩戸を遥拝できる","スサノオを祀り、剣が御神体","ニニギを祀り、天孫降臨の碑がある","タヂカラオを祀り、巨大な力石がある"],a:0,e:"天岩戸神社西本宮にはアマテラスオオミカミが祀られており、神職の案内のもとで御神体の「天の岩戸」を岩戸川越しに遥拝する特別参拝（無料）が行われています。"},
+  {q:"高千穂峡に架かる橋の中で、峡谷の眺望スポットとして人気が高いのはどれですか？",o:["高千穂大橋・神橋・おのころ橋","五ヶ瀬川橋","天浮橋","鬼八橋"],a:0,e:"高千穂峡には高千穂大橋・神橋・おのころ橋など複数の橋が架かっており、橋の上から峡谷の全景を見下ろすビューポイントとして人気があります。各橋からの眺めが少しずつ異なります。"},
+  {q:"高千穂の「くしふる神社（槵觸神社）」はどのような神社ですか？",o:["天孫降臨の地・くしふる峰に鎮座する神社","海の神を祀る神社","縁結び専門の神社","酒造の神を祀る神社"],a:0,e:"くしふる神社は天孫ニニギノミコトが降臨したとされる「くしふる峰」に鎮座し、降臨神話の聖地として崇拝されています。高千穂神社から徒歩圏内にあり、神話散策の定番コースです。"},
+  {q:"高千穂の秋の「夜神楽」観覧で宿泊が必要な理由はどれですか？",o:["夜通し（夕方〜翌朝）行われるため","入場料が高額なため","遠方の集落のみで開催されるため","チケット制で宿泊者優先のため"],a:0,e:"高千穂の夜神楽（里神楽）は夕方から翌朝まで33番を一晩かけて奉納します。深夜まで続くため、遠方から訪れる観光客は高千穂町内に宿泊して鑑賞するのが一般的です。"},
+  {q:"高千穂のアクティビティ「カヌー」や「ラフティング」が行われる川はどれですか？",o:["五ヶ瀬川","耳川","球磨川","大淀川"],a:0,e:"五ヶ瀬川ではカヌー・カヤック・ラフティングなどの川遊びアクティビティが楽しめます。峡谷の自然を水面から体感できるツアーが複数の会社によって催行されています。"},
+  {q:"高千穂神社境内にある「夫婦杉」の周りを二人で手をつないで回ると何の御利益があるとされますか？",o:["縁結び・夫婦円満・子宝","金運上昇","学業成就","交通安全"],a:0,e:"高千穂神社の夫婦杉は二本の杉が寄り添うように立っており、二人で手をつないで木の周りを3回回ると縁結び・夫婦円満・子宝に恵まれるという言い伝えがあります。"},
+  {q:"高千穂峡の「ボート」が混雑するシーズンとして有名な時期はどれですか？",o:["春（桜・新緑）と秋（紅葉）","夏の海水浴シーズン","冬の雪景色","梅雨の増水期"],a:0,e:"高千穂峡のボートは桜・新緑の春と紅葉の秋が最も混雑します。特に10〜11月の紅葉シーズンは数時間待ちになることもあり、整理券の配布や事前予約が必要になる場合があります。"},
+  {q:"高千穂の「そば街道」と呼ばれるエリアで楽しめるのはどれですか？",o:["各地のそば店をめぐる食べ歩き","そば打ち体験のみ","そばの収穫体験農場","そばのテーマパーク"],a:0,e:"高千穂周辺にはそば専門店が点在しており「高千穂そば街道」として知られています。手打ちそば・そば定食・そば打ち体験など多様な形でそば文化を楽しめます。"},
+  {q:"高千穂峡の周辺で楽しめる「滝めぐり」として有名な滝はいくつありますか？",o:["真名井の滝を含む複数の滝","1つだけ","10か所以上の大瀑布群","温泉滝のみ"],a:0,e:"高千穂峡周辺には真名井の滝をはじめ「落門の滝」「玉垂れの滝」など複数の滝があります。遊歩道を歩きながら複数の滝を巡る散策が楽しめます。"},
+  {q:"高千穂の「星空観賞」が有名な理由はどれですか？",o:["山間部で光害が少なく天の川が見える","天文台が多い","星座の神話と合致している","山頂から宇宙が近く見える"],a:0,e:"高千穂は山間部で人口密度が低いため光害が少なく、晴れた夜には天の川や無数の星が肉眼で見えます。神話の里で星空を眺める体験は観光客に人気のアクティビティです。"},
+  {q:"天岩戸神社の「東本宮」に祀られているのはどのような神ですか？",o:["岩戸から出たアマテラスを迎えた神々","スサノオ","ニニギとコノハナサクヤビメ","山の神々"],a:0,e:"東本宮はアマテラスが岩戸から出た後に最初に鎮まったとされる場所で、岩戸川対岸の岩窟（御神体）を祀っています。西本宮の後にこちらも参拝するのが定番のコースです。"},
+  {q:"高千穂峡で紅葉が最も美しい時期はいつですか？",o:["10月下旬〜11月中旬","3〜4月","7〜8月","12〜1月"],a:0,e:"高千穂峡の紅葉は標高が高いため平地より早く、10月下旬〜11月中旬が見ごろです。柱状節理の断崖と赤・黄のコントラストが峡谷を彩り、「紅葉の高千穂峡」として多くの観光客が訪れます。"},
+  {q:"高千穂神社の「鑑賞神楽（かんしょうかぐら）」の入場料はおよそいくらですか？",o:["大人1,000円前後","無料","5,000円","10,000円"],a:0,e:"高千穂神社の鑑賞神楽（毎晩20:00〜）の料金は大人1,000円前後（時期・年度により変更あり）です。外国人観光客にも人気で、多言語のパンフレットも用意されています。"},
+  {q:"「高千穂峡まつり（高千穂峡太鼓まつり）」が開催される時期はいつですか？",o:["8月頃（夏祭り）","1月","5月ゴールデンウイーク","12月"],a:0,e:"高千穂峡太鼓まつりは毎年8月頃に開催される夏のイベントで、峡谷にこだまする太鼓の音と光の演出が幻想的な雰囲気を作り出します。夏の高千穂を代表するイベントの一つです。"},
+  {q:"高千穂あまてらす鉄道の「スーパーカート」から見える最大の見どころはどれですか？",o:["高さ105mの高千穂橋梁からの絶景","高千穂峡のボート","天岩戸神社の本殿","国見ヶ丘の雲海"],a:0,e:"高千穂あまてらす鉄道のスーパーカート（電動ゴーカート）は高千穂橋梁を走り抜ける際、水面から105mの高さからの圧倒的な絶景が最大の見どころです。ガラス越しに峡谷を眼下に見下ろせます。"},
+  {q:"高千穂峡の「遊歩道散策」で見られる岩壁の岩石の名称はどれですか？",o:["溶結凝灰岩（ようけつぎょうかいがん）の柱状節理","石灰岩のカルスト地形","花崗岩の岩山","砂岩の断層崖"],a:0,e:"高千穂峡の断崖は「溶結凝灰岩」と呼ばれる火砕流が冷え固まった岩石が柱状に割れた「柱状節理」です。六角形断面の柱が並ぶ美しいパターンが世界的にも珍しい景観です。"},
+  {q:"高千穂温泉として知られる「天岩戸温泉」の泉質はどれですか？",o:["単純温泉（無色透明・肌に優しい）","硫黄泉","炭酸泉","食塩泉"],a:0,e:"天岩戸温泉（高千穂温泉）は単純温泉が主で、無色透明・弱アルカリ性の肌に優しい泉質が特徴です。神話の里で入る温泉として旅の締めくくりに人気があります。"},
+  {q:"高千穂の「神話の里歩き」コースで定番の参拝・散策コースはどれですか？",o:["高千穂神社→くしふる神社→荒立神社→天岩戸神社→天安河原","高千穂峡だけを歩くコース","温泉のみを巡るコース","そば街道のみを食べ歩くコース"],a:0,e:"高千穂神社→くしふる神社→荒立神社→天岩戸神社（東西本宮）→天安河原を巡る「神話の里歩き」が定番コースです。神話ゆかりの聖地を半日〜1日かけて巡ることができます。"},
+  {q:"高千穂峡の「ボート」の予約方法として正しいのはどれですか？",o:["現地で整理券または事前ネット予約（混雑期）","電話予約のみ","旅行会社経由のみ","予約不要・常時乗れる"],a:0,e:"通常期は現地での当日受付ですが、紅葉シーズンや大型連休は現地で整理券配布または事前ネット予約が必要です。朝早くから並ぶ観光客も多く、混雑期は計画的な来訪が必要です。"},
+  {q:"「荒立神社（あらたてじんじゃ）」でサルタヒコとアメノウズメをお参りすると何の御利益があるとされますか？",o:["芸能・縁結び・道案内","金運・商売繁盛","学業成就・試験合格","航海安全・旅の安全"],a:0,e:"荒立神社はサルタヒコ（道案内の神）とアメノウズメ（芸能の神）を祀るため、芸能・縁結び・仕事の成功にご利益があるとされています。芸能人の参拝も多く、境内に奉納された木の板が多数あります。"},
+  {q:"高千穂峡の「真名井の滝」が「日本の滝百選」に選ばれた年はいつですか？",o:["1990年","1960年","2000年","2010年"],a:0,e:"真名井の滝は1990年（平成2年）に「日本の滝百選」に選定されました。落差17mながら柱状節理の断崖から直接落ちる優美な姿と神話の背景が評価されています。"},
+  {q:"高千穂観光で「神話散策」の後に定番の食事スポットとして知られるのはどれですか？",o:["高千穂神社周辺の食事処・峡谷入口の茶屋","延岡市内のレストラン","宮崎市内の繁華街","熊本の阿蘇レストラン"],a:0,e:"高千穂神社周辺や高千穂峡入口付近にはそば・郷土料理・カフェなどの食事処が集まっており、神話散策の後に高千穂グルメを楽しむのが定番のコースです。"},
+  {q:"「高千穂峡カヌーツアー」の魅力はどれですか？",o:["水面から柱状節理の断崖と滝を間近に体感できる","急流を下るスリル","夜間の星空観察","温泉と組み合わせた入浴ツアー"],a:0,e:"高千穂峡のカヌーツアーでは、ボートでは入れない奥まった場所まで進み、水面から柱状節理の断崖・真名井の滝・エメラルドグリーンの清流を間近で体感できます。ガイド付きツアーが人気です。"},
+  {q:"高千穂の冬の名物として知られる「イルミネーション」イベントはどこで行われますか？",o:["高千穂峡・高千穂神社周辺","天岩戸神社のみ","国見ヶ丘展望台","高千穂あまてらす鉄道車内"],a:0,e:"冬の高千穂では高千穂峡や高千穂神社周辺でイルミネーションイベントが開催されます。峡谷の闇を彩る光と神話の里の雰囲気が合わさった幻想的な冬の風物詩として人気があります。"},
+  {q:"「高千穂神社」の重要文化財に指定されている建造物はどれですか？",o:["本殿（室町時代建立の三間社流造）","鳥居","神楽殿","参道の石灯籠"],a:0,e:"高千穂神社の本殿は1458年（室町時代）建立の三間社流造で、国の重要文化財に指定されています。檜皮葺き（ひわだぶき）の屋根と精巧な彫刻が特徴的な建築です。"},
+  {q:"高千穂峡の「ボート」から見上げた際に最も印象的な景観はどれですか？",o:["柱状節理の断崖と真名井の滝の全景","橋の裏側","水面の反射","底の岩盤"],a:0,e:"ボートに乗って見上げると、高さ80〜100mの柱状節理の断崖が両岸に迫り、真名井の滝がその断崖から直接落下する全景を間近に体験できます。これが高千穂峡最大の見どころです。"},
+  {q:"高千穂の「神楽宿（かぐらやど）」体験として最近人気のプログラムはどれですか？",o:["夜神楽を観覧しながら地元の食事を囲む農家民泊体験","神楽の衣装レンタルのみ","神楽の音楽CDを買う","神楽の歴史書を読む"],a:0,e:"高千穂では伝統的な農家に泊まりながら夜神楽を観覧し、地元の食事（郷土料理）を囲む「農家民泊・神楽宿体験」が近年人気です。神楽の担い手との交流を通じて本物の文化に触れられます。"},
+],
+
+};
+
+/* ══════════════════════════════════════════════════
+   ゲームロジック
+══════════════════════════════════════════════════ */
+const GENRE_NAMES = {history:"歴史",geo:"地理",food:"特産品",spot:"観光スポット"};
+const GENRE_ICONS = {history:"⛩️",geo:"🗺️",food:"🍶",spot:"🌊"};
+const TOTAL_Q    = 10;
+const TIME_START = 120;
+const TIME_CORRECT = 5;
+const TIME_WRONG   = 5;
+const POINT_CORRECT = 10;
+
+let currentGenre = null;
+let playerName   = "";
+let questions    = [];
+let qIndex = 0, score = 0, timeLeft = 0;
+let timerInterval = null;
+let wrongList = [];
+let answered  = false;
+
+function selectGenre(g) {
+  currentGenre = g;
+  const n = GENRE_NAMES[g];
+  document.getElementById('name-badge').textContent       = `${GENRE_ICONS[g]} ${n}クイズ`;
+  document.getElementById('name-genre-title').textContent = `${n}クイズ`;
+  showScreen('name-screen');
+}
+
+function startQuiz() {
+  playerName = document.getElementById('player-name').value.trim() || "プレイヤー";
+  questions  = shuffle([...DB[currentGenre]]).slice(0, TOTAL_Q);
+  qIndex = 0; score = 0; timeLeft = TIME_START; wrongList = [];
+  showScreen('quiz-screen');
+  startTimer();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[qIndex];
+  const labels = ['A','B','C','D'];
+  document.getElementById('q-num').textContent          = `Q${qIndex+1} / ${TOTAL_Q}`;
+  document.getElementById('q-score').textContent        = `${score} pt`;
+  document.getElementById('progress-fill').style.width  = `${(qIndex/TOTAL_Q)*100}%`;
+  document.getElementById('cat-tag').textContent        = GENRE_NAMES[currentGenre];
+  document.getElementById('question-text').textContent  = q.q;
+
+  const grid     = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const shuffled = shuffleWithIndex(q.o);
+  grid._answerMap = shuffled.map(x=>x.orig);
+
+  shuffled.forEach((item, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}</span><span>${item.text}</span>`;
+    btn.onclick   = () => selectAnswer(i, grid._answerMap, q);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  const nb = document.getElementById('next-btn');
+  nb.className   = 'next-btn';
+  nb.textContent = qIndex < TOTAL_Q-1 ? '次の問題へ →' : '結果を見る';
+}
+
+function shuffleWithIndex(arr) {
+  return arr.map((text,i)=>({text,orig:i})).sort(()=>Math.random()-.5);
+}
+
+function selectAnswer(selectedIdx, answerMap, q) {
+  if (answered) return;
+  answered = true;
+  const isCorrect = answerMap[selectedIdx] === q.a;
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((btn,i) => {
+    btn.disabled = true;
+    if (answerMap[i] === q.a) btn.classList.add('correct');
+    else if (i === selectedIdx && !isCorrect) btn.classList.add('wrong');
+  });
+  const fb = document.getElementById('feedback');
+  if (isCorrect) {
+    score    += POINT_CORRECT;
+    timeLeft  = Math.min(timeLeft + TIME_CORRECT, 999);
+    fb.className = 'feedback correct-fb show';
+    fb.innerHTML = `<span class="fb-head">✅ 正解！ <span class="time-badge time-plus">＋${TIME_CORRECT}秒</span></span>${q.e}`;
+  } else {
+    timeLeft = Math.max(timeLeft - TIME_WRONG, 0);
+    fb.className = 'feedback wrong-fb show';
+    fb.innerHTML = `<span class="fb-head">❌ 正解は「${q.o[q.a]}」<span class="time-badge time-minus">−${TIME_WRONG}秒</span></span>${q.e}`;
+    wrongList.push({q:q.q, myAns:q.o[answerMap[selectedIdx]], correct:q.o[q.a], exp:q.e});
+  }
+  document.getElementById('q-score').textContent = `${score} pt`;
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex >= TOTAL_Q) endQuiz(false);
+  else renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) { clearInterval(timerInterval); endQuiz(true); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timer-num');
+  el.textContent = timeLeft;
+  el.className   = 'timer-num' + (timeLeft <= 20 ? ' warn' : '');
+}
+
+function endQuiz(timeUp) {
+  clearInterval(timerInterval);
+  const bonus = timeUp ? 0 : timeLeft;
+  showResult(score + bonus, bonus, timeUp);
+}
+
+function showResult(total, bonus, timeUp) {
+  showScreen('result-screen');
+  const correctCount = score / POINT_CORRECT;
+  const pct = correctCount / TOTAL_Q;
+  let emoji, title, msg;
+  if (timeUp)      { emoji='⏰'; title='時間切れ！';       msg='惜しかった！もっと早く答えて再挑戦！'; }
+  else if (pct===1){ emoji='🏆'; title='高千穂博士！';     msg='完璧！高千穂のすべてを知り尽くしていますね。旅がさらに深まりそうです！'; }
+  else if (pct>=.7){ emoji='🌄'; title='神話通！';         msg='素晴らしい！高千穂の魅力をよく理解しています。旅行が楽しみですね！'; }
+  else if (pct>=.4){ emoji='⛩️'; title='もう少し！';       msg='高千穂にはまだ知らない魅力がたくさん。間違いを振り返ってもう一度！'; }
+  else             { emoji='🌿'; title='旅の準備をしよう！'; msg='高千穂の歴史・自然・グルメをたっぷり予習しましょう！'; }
+
+  document.getElementById('result-emoji').textContent  = emoji;
+  document.getElementById('result-title').textContent  = title;
+  document.getElementById('result-player').textContent = `${playerName} さんの結果`;
+  document.getElementById('r-total').textContent   = total;
+  document.getElementById('r-correct').textContent = `${correctCount} / ${TOTAL_Q}`;
+  document.getElementById('r-bonus').textContent   = `+${bonus}`;
+  document.getElementById('result-msg').textContent = msg;
+
+  showRankingSaveUI(currentGenre, total, correctCount, bonus);
+
+  const ws = document.getElementById('wrong-section');
+  if (wrongList.length === 0) {
+    ws.innerHTML = '<p style="color:#7fe8a8;font-size:15px;text-align:center;">間違えた問題はありません 🎉</p>';
+  } else {
+    ws.innerHTML = `<h3>❌ 間違えた問題（${wrongList.length}問）</h3>` +
+      wrongList.map((w,i) => `
+        <div class="wrong-item">
+          <div class="wi-q">Q${i+1}. ${w.q}</div>
+          <div class="wi-wrong">あなたの答え：${w.myAns}</div>
+          <div class="wi-correct">✅ 正解：${w.correct}</div>
+          <div class="wi-exp">${w.exp}</div>
+        </div>`).join('');
+  }
+}
+
+function retryQuiz(){ startQuiz(); }
+function goTop(){ clearInterval(timerInterval); showScreen('top-screen'); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function shuffle(arr){ return arr.sort(()=>Math.random()-.5); }
+
+/* ══════════════════════════════════════════════════
+   ローカルランキング（localStorage）
+══════════════════════════════════════════════════ */
+const RANK_MAX = 20;
+const LS_PREFIX = 'takachiho_quiz_rank_';
+
+function dateStr(){
+  const d=new Date();
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
+function loadList(genre){
+  try{ return JSON.parse(localStorage.getItem(LS_PREFIX+genre)||'[]'); }catch(e){return [];}
+}
+function saveList(genre,list){
+  localStorage.setItem(LS_PREFIX+genre, JSON.stringify(list));
+}
+function saveRanking(genre,name,total,correct,bonus){
+  const list  = loadList(genre);
+  const entry = {name,total,correct,bonus,date:dateStr()};
+  list.push(entry);
+  list.sort((a,b)=>b.total-a.total||b.correct-a.correct);
+  const trimmed = list.slice(0,RANK_MAX);
+  saveList(genre,trimmed);
+  return trimmed.findIndex(e=>e.name===name&&e.total===total&&e.correct===correct&&e.date===entry.date)+1;
+}
+
+let rankingCurrentGenre = 'history';
+
+function showRanking(genre){
+  genre = genre || rankingCurrentGenre;
+  rankingCurrentGenre = genre;
+  showScreen('ranking-screen');
+  document.querySelectorAll('.genre-tab').forEach(t=>t.classList.toggle('active',t.dataset.genre===genre));
+  renderRankingList(genre);
+}
+function switchRankingTab(genre){
+  rankingCurrentGenre = genre;
+  document.querySelectorAll('.genre-tab').forEach(t=>t.classList.toggle('active',t.dataset.genre===genre));
+  renderRankingList(genre);
+}
+function renderRankingList(genre){
+  const el   = document.getElementById('ranking-list');
+  const list = loadList(genre);
+  if(!list.length){
+    el.innerHTML='<div class="ranking-empty">まだ記録がありません。<br>最初のプレイヤーになろう！🌄</div>';
+    return;
+  }
+  const medals=['🥇','🥈','🥉'];
+  el.innerHTML = list.map((e,i)=>{
+    const rc=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const nc=i===0?'g1' :i===1?'g2' :i===2?'g3' :'gn';
+    return `
+    <div class="ranking-row ${rc}">
+      <div class="rank-num ${nc}">${i+1}</div>
+      <div class="rank-medal">${medals[i]||''}</div>
+      <div class="rank-info">
+        <div class="rank-name">${escHtml(e.name)}</div>
+        <div class="rank-detail">正解 ${e.correct}/${TOTAL_Q}問 ／ ボーナス +${e.bonus} ／ ${e.date}</div>
+      </div>
+      <div class="rank-score">${e.total}<span>pt</span></div>
+    </div>`;
+  }).join('');
+}
+function escHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function showRankingSaveUI(genre,total,correct,bonus){
+  const area = document.getElementById('ranking-save-area');
+  area.innerHTML=`
+    <div style="background:rgba(212,168,67,.1);border:1.5px solid rgba(212,168,67,.3);
+                border-radius:14px;padding:18px 20px;">
+      <div style="font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;
+                  color:var(--gold);margin-bottom:12px;">🏆 ランキングに登録する</div>
+      <button id="rank-save-btn" onclick="doSaveRanking('${genre}',${total},${correct},${bonus})"
+        style="width:100%;background:linear-gradient(135deg,var(--gold),#b88a20);
+               color:#fff;border:none;border-radius:10px;padding:14px;
+               font-family:'Noto Sans JP',sans-serif;font-size:15px;
+               font-weight:700;cursor:pointer;letter-spacing:1.5px;">
+        スコアを登録する（${total}pt）
+      </button>
+      <p style="font-size:11px;color:var(--mist);opacity:.5;margin-top:8px;">
+        ※ この端末のブラウザに保存されます
+      </p>
+    </div>`;
+}
+function doSaveRanking(genre,total,correct,bonus){
+  const rank = saveRanking(genre,playerName,total,correct,bonus);
+  document.getElementById('ranking-save-area').innerHTML=`
+    <div style="background:rgba(46,196,128,.1);border:1px solid rgba(46,196,128,.3);
+                border-radius:14px;padding:16px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:6px;">🎉</div>
+      <div style="font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;color:#7fe8a8;">
+        ランキング ${rank}位 に登録しました！
+      </div>
+      <div style="font-size:13px;color:var(--mist);opacity:.7;margin-top:6px;">
+        ${total}pt ／ ${GENRE_NAMES[genre]}
+      </div>
+    </div>`;
+}
+function clearRanking(){
+  if(!confirm(`「${GENRE_NAMES[rankingCurrentGenre]}」の全記録を削除しますか？`))return;
+  localStorage.removeItem(LS_PREFIX+rankingCurrentGenre);
+  renderRankingList(rankingCurrentGenre);
+}
+</script>
+</body>
+</html>
