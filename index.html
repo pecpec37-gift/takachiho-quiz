@@ -393,6 +393,119 @@ body{
 .rank-detail{font-size:12px;color:var(--mist);opacity:.65;margin-top:2px;}
 .rank-score{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:900;color:var(--gold);text-align:right;min-width:60px;}
 .rank-score span{font-size:11px;font-weight:400;color:var(--mist);opacity:.7;display:block;}
+
+/* ═══ 学習モード ═══ */
+.btn-study{
+  background:rgba(46,196,128,0.12);
+  border:1.5px solid rgba(46,196,128,0.4);
+  color:var(--emerald);
+}
+.btn-study:hover{background:rgba(46,196,128,0.22);border-color:var(--emerald);}
+
+#study-screen{
+  min-height:100vh;padding:40px 20px 80px;
+  max-width:640px;margin:0 auto;width:100%;text-align:center;
+}
+.study-menu-desc{
+  font-size:13px;color:var(--mist);opacity:.75;
+  letter-spacing:1px;margin-top:12px;animation:fadeUp .5s .05s both;
+}
+
+#study-card-screen{
+  min-height:100vh;padding:20px 20px 60px;
+  max-width:720px;margin:0 auto;width:100%;
+}
+.study-top{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-bottom:20px;width:100%;flex-wrap:wrap;
+}
+.study-genre-label{
+  font-family:'Noto Serif JP',serif;font-size:16px;font-weight:700;
+  color:var(--gold);letter-spacing:1px;
+}
+.study-mode-toggle{
+  display:flex;gap:4px;background:rgba(255,255,255,.05);
+  border-radius:40px;padding:4px;
+}
+.smt-btn{
+  background:transparent;border:none;border-radius:40px;
+  padding:7px 18px;font-family:'Noto Sans JP',sans-serif;
+  font-size:12px;font-weight:700;color:var(--mist);
+  cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.smt-btn.active{
+  background:linear-gradient(135deg,var(--forest-mid),var(--green));
+  color:#fff;box-shadow:0 3px 12px rgba(45,122,48,.3);
+}
+
+.study-progress-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.study-count{
+  font-family:'Noto Serif JP',serif;font-size:13px;
+  color:var(--mist);opacity:.8;letter-spacing:1px;white-space:nowrap;
+}
+.study-bar{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+.study-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--mist));border-radius:2px;transition:width .3s;}
+.study-shuffle{
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(200,230,201,.18);
+  border-radius:10px;width:40px;height:34px;font-size:15px;
+  cursor:pointer;color:var(--mist);transition:all .2s;flex-shrink:0;
+}
+.study-shuffle:hover{background:rgba(200,230,201,.14);}
+.study-shuffle.active{background:rgba(46,196,128,.2);border-color:#2ec480;color:#7fe8a8;}
+
+.study-card{
+  background:var(--card-bg);border:1.5px solid var(--card-border);
+  border-radius:18px;padding:28px 24px;width:100%;
+  min-height:200px;cursor:pointer;animation:popIn .35s both;
+}
+.study-card.revealed{cursor:default;}
+.study-q{
+  font-family:'Noto Serif JP',serif;
+  font-size:clamp(17px,3.5vw,21px);font-weight:700;
+  line-height:1.7;color:var(--white);margin-bottom:22px;
+}
+.study-opts{display:grid;gap:10px;}
+.study-opt{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(255,255,255,.04);
+  border:1.5px solid rgba(200,230,201,.12);
+  border-radius:12px;padding:14px 16px;
+  font-size:14px;color:var(--mist);line-height:1.5;transition:all .3s;
+}
+.study-opt.is-correct{background:rgba(46,196,128,.2);border-color:#2ec480;color:#a8efc8;}
+.study-opt.is-correct .opt-label{background:rgba(46,196,128,.4);color:#fff;}
+.study-hint{
+  margin-top:20px;text-align:center;font-size:13px;
+  color:var(--amber);opacity:.85;letter-spacing:1px;
+}
+.study-card.revealed .study-hint{display:none;}
+.study-exp{
+  display:none;margin-top:18px;padding:16px 18px;border-radius:12px;
+  background:rgba(46,196,128,.1);border:1px solid rgba(46,196,128,.25);
+  font-size:13.5px;line-height:1.85;color:#c8f0d8;text-align:left;
+}
+.study-card.revealed .study-exp{display:block;animation:fadeUp .3s both;}
+.study-exp-head{display:block;font-weight:700;font-size:15px;color:#7fe8a8;margin-bottom:8px;}
+
+.study-nav{display:flex;gap:12px;margin-top:20px;}
+.study-nav-btn{
+  flex:1;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(200,230,201,.2);color:var(--mist);
+  border-radius:12px;padding:14px;font-family:'Noto Sans JP',sans-serif;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.study-nav-btn:hover:not(:disabled){background:rgba(200,230,201,.14);border-color:var(--mist);}
+.study-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+.study-list-item{
+  background:rgba(255,255,255,.04);border:1px solid var(--card-border);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px;text-align:left;
+}
+.sli-num{font-family:'Noto Serif JP',serif;font-size:12px;color:var(--amber);letter-spacing:1px;}
+.sli-q{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:var(--white);margin:6px 0 10px;line-height:1.6;}
+.sli-a{font-size:14px;font-weight:700;color:#7fe8a8;margin-bottom:8px;}
+.sli-exp{font-size:13px;color:rgba(255,255,255,.62);line-height:1.75;}
 </style>
 </head>
 <body>
@@ -435,8 +548,9 @@ body{
     ❌ 不正解 → 減点なし ＋ 時間−5秒のペナルティ<br>
     🏆 残り時間がそのままボーナス点に加算！
   </div>
-  <div class="ranking-link">
-    <button class="btn-ranking" onclick="showRanking()">🏆 スコアランキングを見る</button>
+  <div class="ranking-link" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn-ranking btn-study" onclick="showStudy()">📖 学習メニュー</button>
+    <button class="btn-ranking" onclick="showRanking()">🏆 スコアランキング</button>
   </div>
 </div>
 
@@ -462,6 +576,46 @@ body{
       onmouseout="this.style.background='rgba(232,160,48,.1)'">
       🗑️ このジャンルの記録を削除
     </button>
+  </div>
+</div>
+
+<!-- ═══ 学習メニュー ═══ -->
+<div id="study-screen" class="screen">
+  <div class="badge" style="animation:fadeUp .5s both">📖 STUDY</div>
+  <h2 class="ranking-title">学習<span>メニュー</span></h2>
+  <p class="study-menu-desc">タイムを気にせず、じっくり予習・復習できます</p>
+  <div class="genre-grid" id="study-genre-grid" style="margin:32px 0 26px"></div>
+  <button class="btn-secondary" onclick="goTop()">← トップへ</button>
+</div>
+
+<!-- ═══ 学習（カード / 一覧） ═══ -->
+<div id="study-card-screen" class="screen">
+  <div class="study-top">
+    <button class="quit-btn" onclick="showStudy()">← メニュー</button>
+    <div class="study-genre-label" id="study-genre-label"></div>
+    <div class="study-mode-toggle">
+      <button class="smt-btn active" data-mode="card" onclick="setStudyMode('card')">カード</button>
+      <button class="smt-btn" data-mode="list" onclick="setStudyMode('list')">一覧</button>
+    </div>
+  </div>
+
+  <!-- カード学習 -->
+  <div id="study-card-view">
+    <div class="study-progress-row">
+      <span class="study-count" id="study-count">1 / 1</span>
+      <div class="study-bar"><div class="study-bar-fill" id="study-bar-fill" style="width:0%"></div></div>
+      <button class="study-shuffle" id="study-shuffle-btn" onclick="toggleStudyShuffle()" title="順番をシャッフル">🔀</button>
+    </div>
+    <div class="study-card" id="study-card"></div>
+    <div class="study-nav">
+      <button class="study-nav-btn" id="study-prev" onclick="studyPrev()">← 前へ</button>
+      <button class="study-nav-btn" id="study-next" onclick="studyNext()">次へ →</button>
+    </div>
+  </div>
+
+  <!-- 一覧学習 -->
+  <div id="study-list-view" style="display:none">
+    <div id="study-list"></div>
   </div>
 </div>
 
@@ -869,6 +1023,113 @@ function showScreen(id){
   window.scrollTo(0,0);
 }
 function shuffle(arr){ return arr.sort(()=>Math.random()-.5); }
+
+/* ══════════════════════════════════════════════════
+   学習モード（タイムなし・全問閲覧）
+══════════════════════════════════════════════════ */
+const GENRE_DESC = {
+  history:"神話・神社・古代史",
+  geo:"地形・川・交通・気候",
+  food:"食べ物・工芸・産業",
+  spot:"峡谷・滝・祭り・体験"
+};
+
+let studyGenre   = null;
+let studyDeck    = [];
+let studyIndex   = 0;
+let studyMode    = 'card';
+let studyShuffle = false;
+
+function showStudy(){
+  const grid = document.getElementById('study-genre-grid');
+  grid.innerHTML = Object.keys(GENRE_NAMES).map(g=>`
+    <div class="genre-card" onclick="startStudy('${g}')">
+      <div class="genre-icon">${GENRE_ICONS[g]}</div>
+      <div class="genre-name">${GENRE_NAMES[g]}</div>
+      <div class="genre-count">全${DB[g].length}問 ／ ${GENRE_DESC[g]}</div>
+    </div>`).join('');
+  showScreen('study-screen');
+}
+
+function startStudy(g){
+  studyGenre = g;
+  buildStudyDeck();
+  studyIndex = 0;
+  document.getElementById('study-genre-label').textContent = `${GENRE_ICONS[g]} ${GENRE_NAMES[g]}`;
+  document.getElementById('study-shuffle-btn').classList.toggle('active', studyShuffle);
+  showScreen('study-card-screen');
+  setStudyMode('card');
+}
+
+function buildStudyDeck(){
+  studyDeck = studyShuffle ? shuffle([...DB[studyGenre]]) : [...DB[studyGenre]];
+}
+
+function setStudyMode(mode){
+  studyMode = mode;
+  document.querySelectorAll('.smt-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  document.getElementById('study-card-view').style.display = mode==='card' ? 'block' : 'none';
+  document.getElementById('study-list-view').style.display = mode==='list' ? 'block' : 'none';
+  if(mode==='card') renderStudyCard();
+  else              renderStudyList();
+}
+
+function toggleStudyShuffle(){
+  studyShuffle = !studyShuffle;
+  document.getElementById('study-shuffle-btn').classList.toggle('active', studyShuffle);
+  buildStudyDeck();
+  studyIndex = 0;
+  if(studyMode==='card') renderStudyCard();
+  else                   renderStudyList();
+}
+
+function renderStudyCard(){
+  const total  = studyDeck.length;
+  const q      = studyDeck[studyIndex];
+  const labels = ['A','B','C','D'];
+  document.getElementById('study-count').textContent      = `${studyIndex+1} / ${total}`;
+  document.getElementById('study-bar-fill').style.width   = `${((studyIndex+1)/total)*100}%`;
+
+  const card = document.getElementById('study-card');
+  card.classList.remove('revealed');
+  card.innerHTML = `
+    <div class="cat-tag">${GENRE_ICONS[studyGenre]} ${GENRE_NAMES[studyGenre]}</div>
+    <div class="study-q">${q.q}</div>
+    <div class="study-opts">
+      ${q.o.map((t,i)=>`<div class="study-opt" data-i="${i}"><span class="opt-label">${labels[i]}</span><span>${escHtml(t)}</span></div>`).join('')}
+    </div>
+    <div class="study-hint">👆 タップして答えと解説を見る</div>
+    <div class="study-exp"><span class="study-exp-head">✅ 正解：${escHtml(q.o[q.a])}</span>${q.e}</div>
+  `;
+  card.onclick = revealStudy;
+
+  document.getElementById('study-prev').disabled = studyIndex === 0;
+  document.getElementById('study-next').disabled = studyIndex === total-1;
+}
+
+function revealStudy(){
+  const card = document.getElementById('study-card');
+  if(card.classList.contains('revealed')) return;
+  card.classList.add('revealed');
+  const q = studyDeck[studyIndex];
+  card.querySelectorAll('.study-opt').forEach(el=>{
+    if(Number(el.dataset.i) === q.a) el.classList.add('is-correct');
+  });
+}
+
+function studyPrev(){ if(studyIndex>0){ studyIndex--; renderStudyCard(); window.scrollTo(0,0);} }
+function studyNext(){ if(studyIndex<studyDeck.length-1){ studyIndex++; renderStudyCard(); window.scrollTo(0,0);} }
+
+function renderStudyList(){
+  const el = document.getElementById('study-list');
+  el.innerHTML = studyDeck.map((q,i)=>`
+    <div class="study-list-item">
+      <div class="sli-num">Q${i+1}</div>
+      <div class="sli-q">${q.q}</div>
+      <div class="sli-a">✅ ${escHtml(q.o[q.a])}</div>
+      <div class="sli-exp">${q.e}</div>
+    </div>`).join('');
+}
 
 /* ══════════════════════════════════════════════════
    ローカルランキング（localStorage）
